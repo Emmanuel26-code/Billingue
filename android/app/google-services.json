@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "745514946192",
+    "project_id": "fir-auth-921be",
+    "storage_bucket": "fir-auth-921be.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:745514946192:android:c1cc12640684489dc89215",
+        "android_client_info": {
+          "package_name": "com.example.billingue2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "745514946192-ts5rgkjoi02hg30bnp2eu8549f8p98e6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuJDC4BWmt44QpFbfdmOmSRivKvHrQWPg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "745514946192-ts5rgkjoi02hg30bnp2eu8549f8p98e6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
