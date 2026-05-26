@@ -14,7 +14,9 @@ dependencies:
   geolocator: ^14.0.2
   google_maps_flutter: ^2.17.0
   flutter_riverpod: ^3.3.1
-  google_generative_ai: ^0.4.7
+  http: ^1.2.0
+  flutter_tts: ^4.0.2
+  speech_to_text: ^6.6.2
 
 dev_dependencies:
   flutter_test:
@@ -26,6 +28,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/avatars/
 
   # Utilise les polices système (Nunito peut être ajouté manuellement)
   # fonts:

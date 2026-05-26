@@ -49,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen>
             xpReward: list[i + 1].xpReward,
             isUnlocked: true,
             questions: list[i + 1].questions,
+            courseCards: list[i + 1].courseCards,
           );
         }
       }
@@ -198,8 +199,7 @@ class _Header extends StatelessWidget {
                   CircleAvatar(
                     radius: 22,
                     backgroundColor: Colors.white.withOpacity(0.2),
-                    child: const Text('🧑🏾',
-                        style: TextStyle(fontSize: 22)),
+                    backgroundImage: AssetImage(progress.avatar),
                   ),
                 ],
               ),

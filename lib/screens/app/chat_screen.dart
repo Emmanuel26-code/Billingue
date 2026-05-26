@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
-import '../../services/gemini_service.dart';
+import '../../services/ai_service.dart';
+import '../../services/tts_service.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -10,46 +11,72 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final GeminiService _gemini = GeminiService();
+  final AiService _ai = AiService();
+  final TtsService _tts = TtsService();
   final TextEditingController _ctrl = TextEditingController();
   final ScrollController _scroll = ScrollController();
   final List<_Message> _messages = [];
   bool _loading = false;
+  String? _speakingId;
 
   @override
   void initState() {
     super.initState();
-    // Message de bienvenue automatique
+    _tts.init();
     _sendWelcome();
   }
 
   Future<void> _sendWelcome() async {
     setState(() => _loading = true);
-    final response = await _gemini.sendMessage('Présente-toi brièvement.');
-    setState(() {
-      _messages.add(_Message(text: response, isUser: false));
-      _loading = false;
-    });
-    _scrollDown();
+    final response = await _ai.sendMessage('Présente-toi brièvement en 2 phrases.');
+    if (mounted) {
+      setState(() {
+        _messages.add(_Message(text: response, isUser: false));
+        _loading = false;
+      });
+      _scrollDown();
+      // Aya parle automatiquement au démarrage
+      await _speakMessage(response, _messages.last.id);
+    }
   }
 
   Future<void> _send() async {
     final text = _ctrl.text.trim();
     if (text.isEmpty || _loading) return;
-
     _ctrl.clear();
+    await _tts.stop();
+
     setState(() {
       _messages.add(_Message(text: text, isUser: true));
       _loading = true;
     });
     _scrollDown();
 
-    final response = await _gemini.sendMessage(text);
-    setState(() {
-      _messages.add(_Message(text: response, isUser: false));
-      _loading = false;
-    });
-    _scrollDown();
+    final response = await _ai.sendMessage(text);
+    if (mounted) {
+      setState(() {
+        _messages.add(_Message(text: response, isUser: false));
+        _loading = false;
+      });
+      _scrollDown();
+      await _speakMessage(response, _messages.last.id);
+    }
+  }
+
+  Future<void> _speakMessage(String text, String id) async {
+    setState(() => _speakingId = id);
+    await _tts.speak(text);
+    if (mounted) setState(() => _speakingId = null);
+  }
+
+  Future<void> _toggleSpeak(String text, String id) async {
+    if (_speakingId == id) {
+      await _tts.stop();
+      setState(() => _speakingId = null);
+    } else {
+      await _tts.stop();
+      await _speakMessage(text, id);
+    }
   }
 
   void _scrollDown() {
@@ -66,6 +93,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    _tts.dispose();
     _ctrl.dispose();
     _scroll.dispose();
     super.dispose();
@@ -101,32 +129,45 @@ class _ChatScreenState extends State<ChatScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Aya',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        Text(
-                          'Assistante Baoulé • En ligne',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
-                            fontSize: 12,
-                          ),
-                        ),
+                        const Text('Aya',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800)),
+                        Text('Assistante Baoulé • En ligne',
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.85),
+                                fontSize: 12)),
                       ],
                     ),
                     const Spacer(),
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF2ECC71),
-                        shape: BoxShape.circle,
+                    // Bouton stop audio
+                    if (_speakingId != null)
+                      GestureDetector(
+                        onTap: () async {
+                          await _tts.stop();
+                          setState(() => _speakingId = null);
+                        },
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.stop_rounded,
+                              color: Colors.white, size: 20),
+                        ),
+                      )
+                    else
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF2ECC71),
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -135,31 +176,33 @@ class _ChatScreenState extends State<ChatScreen> {
 
           // Messages
           Expanded(
-            child: _messages.isEmpty && !_loading
-                ? _buildEmpty()
-                : ListView.builder(
-                    controller: _scroll,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    itemCount: _messages.length + (_loading ? 1 : 0),
-                    itemBuilder: (_, i) {
-                      if (i == _messages.length) return _TypingBubble();
-                      return _MessageBubble(message: _messages[i]);
-                    },
-                  ),
+            child: ListView.builder(
+              controller: _scroll,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              itemCount: _messages.length + (_loading ? 1 : 0),
+              itemBuilder: (_, i) {
+                if (i == _messages.length) return _TypingBubble();
+                final msg = _messages[i];
+                return _MessageBubble(
+                  message: msg,
+                  isSpeaking: _speakingId == msg.id,
+                  onSpeak: () => _toggleSpeak(msg.text, msg.id),
+                );
+              },
+            ),
           ),
 
-          // Suggestions rapides
-          if (_messages.length <= 1 && !_loading)
-            _buildSuggestions(),
+          // Suggestions
+          if (_messages.length <= 1 && !_loading) _buildSuggestions(),
 
           // Input
           Container(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
             decoration: BoxDecoration(
               color: Colors.white,
-              border: Border(
-                  top: BorderSide(color: Colors.grey.shade200)),
+              border:
+                  Border(top: BorderSide(color: Colors.grey.shade200)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -221,27 +264,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildEmpty() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text('🌺', style: TextStyle(fontSize: 60)),
-          const SizedBox(height: 16),
-          const Text('Aya',
-              style:
-                  TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 8),
-          Text(
-            'Ton assistante pour apprendre\nle Baoulé',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSuggestions() {
     final suggestions = [
       'Comment dire bonjour ?',
@@ -263,8 +285,8 @@ class _ChatScreenState extends State<ChatScreen> {
           },
           child: Container(
             margin: const EdgeInsets.only(right: 8),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: AppTheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
@@ -274,10 +296,9 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Text(
               suggestions[i],
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.primary,
-              ),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.primary),
             ),
           ),
         ),
@@ -286,20 +307,29 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-// ── Widgets ───────────────────────────────────────────────────────────────────
+// ── Models ────────────────────────────────────────────────────────────────────
 
 class _Message {
+  final String id;
   final String text;
   final bool isUser;
-  final DateTime time;
 
   _Message({required this.text, required this.isUser})
-      : time = DateTime.now();
+      : id = DateTime.now().microsecondsSinceEpoch.toString();
 }
+
+// ── Widgets ───────────────────────────────────────────────────────────────────
 
 class _MessageBubble extends StatelessWidget {
   final _Message message;
-  const _MessageBubble({required this.message});
+  final bool isSpeaking;
+  final VoidCallback onSpeak;
+
+  const _MessageBubble({
+    required this.message,
+    required this.isSpeaking,
+    required this.onSpeak,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -331,39 +361,95 @@ class _MessageBubble extends StatelessWidget {
                   color: AppTheme.primary.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child:
-                    const Center(child: Text('🤖', style: TextStyle(fontSize: 16))),
+                child: const Center(
+                    child:
+                        Text('🤖', style: TextStyle(fontSize: 16))),
               ),
               const SizedBox(width: 8),
             ],
             Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isUser ? AppTheme.primary : Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(18),
-                    topRight: const Radius.circular(18),
-                    bottomLeft: Radius.circular(isUser ? 18 : 4),
-                    bottomRight: Radius.circular(isUser ? 4 : 18),
+              child: Column(
+                crossAxisAlignment: isUser
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color:
+                          isUser ? AppTheme.primary : Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(18),
+                        topRight: const Radius.circular(18),
+                        bottomLeft:
+                            Radius.circular(isUser ? 18 : 4),
+                        bottomRight:
+                            Radius.circular(isUser ? 4 : 18),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      message.text,
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.5,
+                        color: isUser
+                            ? Colors.white
+                            : AppTheme.textDark,
+                      ),
+                    ),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
+                  // Bouton écouter (seulement pour Aya)
+                  if (!isUser) ...[
+                    const SizedBox(height: 4),
+                    GestureDetector(
+                      onTap: onSpeak,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: isSpeaking
+                              ? AppTheme.primary.withOpacity(0.15)
+                              : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isSpeaking
+                                  ? Icons.stop_rounded
+                                  : Icons.volume_up_rounded,
+                              size: 14,
+                              color: isSpeaking
+                                  ? AppTheme.primary
+                                  : Colors.grey,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              isSpeaking ? 'Stop' : 'Écouter',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isSpeaking
+                                    ? AppTheme.primary
+                                    : Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
-                ),
-                child: Text(
-                  message.text,
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 1.5,
-                    color: isUser ? Colors.white : AppTheme.textDark,
-                  ),
-                ),
+                ],
               ),
             ),
             if (isUser) const SizedBox(width: 8),
@@ -388,7 +474,8 @@ class _TypingBubbleState extends State<_TypingBubble>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 800))
+        vsync: this,
+        duration: const Duration(milliseconds: 800))
       ..repeat(reverse: true);
     _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
   }
@@ -417,8 +504,8 @@ class _TypingBubbleState extends State<_TypingBubble>
           ),
           const SizedBox(width: 8),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: const BorderRadius.only(
@@ -440,17 +527,16 @@ class _TypingBubbleState extends State<_TypingBubble>
               builder: (_, __) => Row(
                 mainAxisSize: MainAxisSize.min,
                 children: List.generate(3, (i) {
+                  final delay = i * 0.3;
+                  final val = ((_anim.value + delay) % 1.0);
                   return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 3),
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(
-                          0.3 + 0.7 * ((i == 0
-                              ? _anim.value
-                              : i == 1
-                                  ? (_anim.value + 0.3) % 1
-                                  : (_anim.value + 0.6) % 1))),
+                      color: AppTheme.primary
+                          .withOpacity(0.3 + 0.7 * val),
                       shape: BoxShape.circle,
                     ),
                   );

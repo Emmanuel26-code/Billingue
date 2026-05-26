@@ -1,7 +1,11 @@
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../core/secrets.dart';
 
-class GeminiService {
+class AiService {
+  static const String _apiUrl = 'https://api.anthropic.com/v1/messages';
+  static const String _model = 'claude-sonnet-4-5';
+
   static const String _systemPrompt = '''
 Tu es Aya, une assistante spécialisée dans la langue Baoulé de Côte d'Ivoire 🇨🇮.
 Tu aides les utilisateurs à apprendre le Baoulé à travers l'application Billingue.
@@ -14,11 +18,11 @@ Tes règles :
 - Tu expliques aussi la culture Akan et ivoirienne quand c'est lié
 - Tu ne réponds qu'aux sujets liés au Baoulé, à la Côte d'Ivoire et à l'apprentissage des langues
 - Si on te pose une question hors sujet, tu ramènes gentiment la conversation au Baoulé
-- Tu commences toujours par te présenter comme Aya si c'est le premier message
+- Tu te présentes comme Aya au premier message
 
 Vocabulaire de base que tu maîtrises :
 - Akwaba = Bienvenue/Bonjour
-- N'dɛ = Comment vas-tu ?
+- N\'dɛ = Comment vas-tu ?
 - Mi si = Je vais bien
 - Mɛ = Merci
 - Yako = Courage/Condoléances
@@ -28,28 +32,38 @@ Vocabulaire de base que tu maîtrises :
 - Nzue = Eau, Mlo = Igname, Mi di = Je mange, Mi nuan = Je bois, Kpɔ = Poisson
 ''';
 
-  late final GenerativeModel _model;
-  late final ChatSession _chat;
-
-  GeminiService() {
-    _model = GenerativeModel(
-      model: 'gemini-1.5-flash-001',
-      apiKey: Secrets.geminiApiKey,
-      systemInstruction: Content.system(_systemPrompt),
-      generationConfig: GenerationConfig(
-        temperature: 0.7,
-        maxOutputTokens: 800,
-      ),
-    );
-    _chat = _model.startChat();
-  }
+  final List<Map<String, String>> _history = [];
 
   Future<String> sendMessage(String message) async {
     try {
-    final response = await _chat.sendMessage(Content.text(message));
-    return response.text ?? 'Réponse vide.';
-   } catch (e) {
-    return 'ERREUR : ${e.toString()}';
-  }
+      _history.add({'role': 'user', 'content': message});
+
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': Secrets.anthropicApiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: jsonEncode({
+          'model': _model,
+          'max_tokens': 800,
+          'system': _systemPrompt,
+          'messages': _history,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final reply = data['content'][0]['text'] as String;
+        _history.add({'role': 'assistant', 'content': reply});
+        return reply;
+      } else {
+        final error = jsonDecode(response.body);
+        return 'ERREUR : ${error['error']['message']}';
+      }
+    } catch (e) {
+      return 'Erreur de connexion : ${e.toString()}';
+    }
   }
 }
