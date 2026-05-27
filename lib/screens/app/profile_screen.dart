@@ -1,3 +1,6 @@
+import 'package:BillingueApp/screens/auth/welcome_screen.dart';
+import 'package:BillingueApp/services/auth_service.dart';
+import 'package:BillingueApp/services/user_service.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../data/lessons_data.dart';
@@ -7,7 +10,8 @@ import 'stats_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserProgress progress;
-  const ProfileScreen({super.key, required this.progress});
+  final String uid;
+  const ProfileScreen({super.key, required this.progress, required this.uid});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -21,8 +25,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => AvatarPicker(
         currentAvatar: widget.progress.avatar,
-        onSelected: (avatar) {
+        onSelected: (avatar) async {
           setState(() => widget.progress.avatar = avatar);
+          await UserService().updateAvatar(
+            uid: widget.uid,
+            avatar: avatar,
+          ); 
         },
       ),
     );
@@ -220,9 +228,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _Item('🌍', const Color(0xFFE5F0FF), 'Langue',
                       null, () {}),
                   _Item('🚪', const Color(0xFFFFF0F0), 'Déconnexion',
-                      AppTheme.danger, () {
-                    Navigator.of(context).popUntil((r) => r.isFirst);
-                  }),
+                      AppTheme.danger, () async {
+                        await AuthService().signOut();
+                        if (context.mounted) {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (_) => const WelcomeScreen()),
+                            (_) => false,
+                          );
+                        }
+                      }),
                 ],
               ),
             ),

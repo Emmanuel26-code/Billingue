@@ -81,7 +81,7 @@ class _LessonScreenState extends State<LessonScreen>
             totalQuestions: _ctrl.totalQuestions,
             earnedXP: _ctrl.earnedXP,
             accuracy: _ctrl.accuracy,
-            progress: widget.progress,
+            progress: widget.progress, uid: '',
           ),
           transitionsBuilder: (_, anim, __, child) =>
               FadeTransition(opacity: anim, child: child),

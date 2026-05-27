@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/theme.dart';
+import '../../services/user_service.dart';
+import '../../models/lesson_model.dart';
+import '../app/main_screen.dart';
 import 'auth_widgets.dart';
 import 'welcome_screen.dart';
 
@@ -46,17 +50,50 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 600));
     _textCtrl.forward();
     await Future.delayed(const Duration(milliseconds: 1800));
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (_, anim, __) => const WelcomeScreen(),
-          transitionsBuilder: (_, anim, __, child) =>
-              FadeTransition(opacity: anim, child: child),
-          transitionDuration: const Duration(milliseconds: 600),
-        ),
-      );
+    if (mounted) _checkAuth();
+  }
+
+  Future<void> _checkAuth() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      // Utilisateur déjà connecté → charger son profil
+      final userModel =
+          await UserService().getUser(user.uid);
+
+      if (mounted) {
+        if (userModel != null) {
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, anim, __) => MainScreen(
+                progress: userModel.toUserProgress(),
+                uid: user.uid,
+              ),
+              transitionsBuilder: (_, anim, __, child) =>
+                  FadeTransition(opacity: anim, child: child),
+              transitionDuration: const Duration(milliseconds: 600),
+            ),
+          );
+        } else {
+          _goToWelcome();
+        }
+      }
+    } else {
+      _goToWelcome();
     }
+  }
+
+  void _goToWelcome() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, anim, __) => const WelcomeScreen(),
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
+        transitionDuration: const Duration(milliseconds: 600),
+      ),
+    );
   }
 
   @override

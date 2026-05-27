@@ -7,7 +7,8 @@ import 'chat_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final UserProgress progress;
-  const MainScreen({super.key, required this.progress});
+  final String uid;
+  const MainScreen({super.key, required this.progress,required this.uid,});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -28,7 +29,7 @@ class _MainScreenState extends State<MainScreen> {
       ),
       const ChatScreen(),
       const _Soon(icon: '🏆', label: 'Classement'),
-      ProfileScreen(progress: widget.progress),
+      ProfileScreen(progress: widget.progress, uid: '',),
     ];
   }
 

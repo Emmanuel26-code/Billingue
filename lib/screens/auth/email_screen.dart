@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../core/theme.dart';
 import 'auth_widgets.dart';
-import 'time_screen.dart';
+import 'password_screen.dart';
 
 class EmailScreen extends StatefulWidget {
   final String age;
@@ -32,7 +33,7 @@ class _EmailScreenState extends State<EmailScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => TimeScreen(
+        builder: (_) => PasswordScreen(
           age: widget.age,
           nom: widget.nom,
           prenom: widget.prenom,
@@ -49,16 +50,19 @@ class _EmailScreenState extends State<EmailScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            AuthTopBar(progress: 0.60, onBack: () => Navigator.pop(context)),
+            AuthTopBar(
+                progress: 0.60,
+                onBack: () => Navigator.pop(context)),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 28),
                 child: Column(
                   children: [
                     const SizedBox(height: 36),
-                    const Text('Quelles est ton adresse e-mail',
+                    const Text('Quelle est ton adresse e-mail ?',
                         style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.w800),
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800),
                         textAlign: TextAlign.center),
                     const SizedBox(height: 28),
                     AuthInput(
@@ -67,7 +71,8 @@ class _EmailScreenState extends State<EmailScreen> {
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 20),
-                    OrangeButton(label: 'CONTINUE', onTap: _continue),
+                    OrangeButton(
+                        label: 'CONTINUE', onTap: _continue),
                   ],
                 ),
               ),

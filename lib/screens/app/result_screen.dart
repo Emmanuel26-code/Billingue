@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../models/lesson_model.dart';
 import 'main_screen.dart';
+import '../../services/user_service.dart';
 
 class ResultScreen extends StatefulWidget {
   final LessonModel lesson;
@@ -11,6 +12,7 @@ class ResultScreen extends StatefulWidget {
   final int earnedXP;
   final int accuracy;
   final UserProgress progress;
+  final String uid;
 
   const ResultScreen({
     super.key,
@@ -20,6 +22,7 @@ class ResultScreen extends StatefulWidget {
     required this.earnedXP,
     required this.accuracy,
     required this.progress,
+    required this.uid,
   });
 
   @override
@@ -60,11 +63,20 @@ class _ResultScreenState extends State<ResultScreen>
   }
 
   Future<void> _start() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    _main.forward();
-    if (widget.accuracy >= 70) _confetti.repeat();
-    await Future.delayed(const Duration(milliseconds: 600));
-    _xpCtrl.forward();
+   await Future.delayed(const Duration(milliseconds: 200));
+  _main.forward();
+  if (widget.accuracy >= 70) _confetti.repeat();
+  await Future.delayed(const Duration(milliseconds: 600));
+  _xpCtrl.forward();
+
+  // ← Sauvegarde dans Firestore
+  if (widget.uid.isNotEmpty) {
+    await UserService().completeLesson(
+      uid: widget.uid,
+      lessonId: widget.lesson.id,
+      xpGained: widget.earnedXP,
+    );
+  }
   }
 
   @override
@@ -178,7 +190,8 @@ class _ResultScreenState extends State<ResultScreen>
                             context,
                             MaterialPageRoute(
                                 builder: (_) => MainScreen(
-                                    progress: widget.progress)),
+                                    progress: widget.progress,
+                                    uid: widget.uid)),
                             (_) => false,
                           ),
                           child: const Text('Continuer 🚀'),

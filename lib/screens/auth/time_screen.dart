@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
+import '../../services/auth_service.dart';
+import '../app/main_screen.dart';
 import 'auth_widgets.dart';
 import 'congrats_screen.dart';
 
@@ -8,6 +10,7 @@ class TimeScreen extends StatefulWidget {
   final String nom;
   final String prenom;
   final String email;
+  final String password;
 
   const TimeScreen({
     super.key,
@@ -15,6 +18,7 @@ class TimeScreen extends StatefulWidget {
     required this.nom,
     required this.prenom,
     required this.email,
+    required this.password,
   });
 
   @override
@@ -23,6 +27,7 @@ class TimeScreen extends StatefulWidget {
 
 class _TimeScreenState extends State<TimeScreen> {
   int _selectedIndex = 1;
+  bool _loading = false;
 
   final List<Map<String, String>> _goals = const [
     {'label': 'Moyens', 'duration': '5 min / jour'},
@@ -31,16 +36,45 @@ class _TimeScreenState extends State<TimeScreen> {
     {'label': 'Intense', 'duration': '20 min / jour'},
   ];
 
-  void _continue() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CongratsScreen(
-          prenom: widget.prenom,
-          goal: _goals[_selectedIndex]['label']!,
-        ),
-      ),
+  Future<void> _continue() async {
+    setState(() => _loading = true);
+
+    final result = await AuthService().register(
+      email: widget.email,
+      password: widget.password,
+      nom: widget.nom,
+      prenom: widget.prenom,
+      age: widget.age,
+      objectif: _goals[_selectedIndex]['label']!,
+      avatar: 'assets/avatars/avatar.png',
     );
+
+    if (mounted) {
+      setState(() => _loading = false);
+      if (result.success) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CongratsScreen(
+              prenom: widget.prenom,
+              goal: _goals[_selectedIndex]['label']!,
+              progress: result.user!.toUserProgress(),
+              uid: result.user!.uid,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.error!),
+            backgroundColor: AppTheme.danger,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -50,7 +84,9 @@ class _TimeScreenState extends State<TimeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            AuthTopBar(progress: 0.80, onBack: () => Navigator.pop(context)),
+            AuthTopBar(
+                progress: 0.90,
+                onBack: () => Navigator.pop(context)),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -59,24 +95,29 @@ class _TimeScreenState extends State<TimeScreen> {
                     const SizedBox(height: 36),
                     const Text('Quel est ton objectif ?',
                         style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.w800),
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800),
                         textAlign: TextAlign.center),
                     const SizedBox(height: 32),
                     Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
+                        border:
+                            Border.all(color: Colors.grey.shade300),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(14),
                         child: Column(
-                          children: List.generate(_goals.length, (i) {
+                          children:
+                              List.generate(_goals.length, (i) {
                             final selected = _selectedIndex == i;
                             final isLast = i == _goals.length - 1;
                             return GestureDetector(
-                              onTap: () => setState(() => _selectedIndex = i),
+                              onTap: () =>
+                                  setState(() => _selectedIndex = i),
                               child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
+                                duration:
+                                    const Duration(milliseconds: 200),
                                 decoration: BoxDecoration(
                                   color: selected
                                       ? const Color(0xFFFFF3E8)
@@ -84,7 +125,8 @@ class _TimeScreenState extends State<TimeScreen> {
                                   border: !isLast
                                       ? Border(
                                           bottom: BorderSide(
-                                              color: Colors.grey.shade200))
+                                              color: Colors
+                                                  .grey.shade200))
                                       : null,
                                 ),
                                 padding: const EdgeInsets.symmetric(
@@ -118,7 +160,11 @@ class _TimeScreenState extends State<TimeScreen> {
                       ),
                     ),
                     const Spacer(),
-                    OrangeButton(label: 'CONTINUE', onTap: _continue),
+                    _loading
+                        ? const CircularProgressIndicator(
+                            color: AppTheme.primary)
+                        : OrangeButton(
+                            label: 'CONTINUE', onTap: _continue),
                     const SizedBox(height: 24),
                   ],
                 ),

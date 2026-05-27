@@ -7,11 +7,15 @@ import 'auth_widgets.dart';
 class CongratsScreen extends StatefulWidget {
   final String prenom;
   final String goal;
+  final UserProgress progress;
+  final String uid;
 
   const CongratsScreen({
     super.key,
     required this.prenom,
     required this.goal,
+    required this.progress,
+    required this.uid,
   });
 
   @override
@@ -31,7 +35,8 @@ class _CongratsScreenState extends State<CongratsScreen>
         vsync: this, duration: const Duration(milliseconds: 900));
     _scale = Tween<double>(begin: 0.5, end: 1.0).animate(
         CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
-    _fade = CurvedAnimation(parent: _ctrl, curve: const Interval(0, 0.5));
+    _fade = CurvedAnimation(
+        parent: _ctrl, curve: const Interval(0, 0.5));
     _ctrl.forward();
   }
 
@@ -87,7 +92,8 @@ class _CongratsScreenState extends State<CongratsScreen>
                   ),
                   const SizedBox(height: 60),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 40),
                     child: SizedBox(
                       width: double.infinity,
                       height: 54,
@@ -97,7 +103,9 @@ class _CongratsScreenState extends State<CongratsScreen>
                             context,
                             MaterialPageRoute(
                               builder: (_) => MainScreen(
-                                  progress: UserProgress(streak: 1)),
+                                progress: widget.progress,
+                                uid: widget.uid,
+                              ),
                             ),
                             (_) => false,
                           );
