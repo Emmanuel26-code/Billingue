@@ -11,9 +11,10 @@ import 'result_screen.dart';
 class LessonScreen extends StatefulWidget {
   final LessonModel lesson;
   final UserProgress progress;
+  final String uid;
 
   const LessonScreen(
-      {super.key, required this.lesson, required this.progress});
+      {super.key, required this.lesson, required this.progress, required this.uid});
 
   @override
   State<LessonScreen> createState() => _LessonScreenState();
@@ -60,12 +61,6 @@ class _LessonScreenState extends State<LessonScreen>
     _ctrl.selectAnswer(answer);
     setState(() => _showFb = true);
     _fbAnim.forward(from: 0);
-    if (_ctrl.isCorrect) {
-      _tts.speak('Excellent ! ${_ctrl.currentQuestion.explanation}');
-    } else {
-      _tts.speak(
-          'La bonne réponse est ${_ctrl.currentQuestion.correctAnswer}');
-    }
   }
 
   Future<void> _next() async {
@@ -81,7 +76,8 @@ class _LessonScreenState extends State<LessonScreen>
             totalQuestions: _ctrl.totalQuestions,
             earnedXP: _ctrl.earnedXP,
             accuracy: _ctrl.accuracy,
-            progress: widget.progress, uid: '',
+            progress: widget.progress, uid: widget.uid,
+            errorCount: _ctrl.errorCount,
           ),
           transitionsBuilder: (_, anim, __, child) =>
               FadeTransition(opacity: anim, child: child),

@@ -9,7 +9,6 @@ class UserService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   static const String _collection = 'users';
 
-  // ── Créer un utilisateur ──────────────────────────────────────────────────
   Future<void> createUser(UserModel user) async {
     await _db
         .collection(_collection)
@@ -17,7 +16,6 @@ class UserService {
         .set(user.toMap());
   }
 
-  // ── Lire un utilisateur ───────────────────────────────────────────────────
   Future<UserModel?> getUser(String uid) async {
     try {
       final doc =
@@ -29,23 +27,26 @@ class UserService {
     }
   }
 
-  // ── Mettre à jour la progression ─────────────────────────────────────────
-  Future<void> updateProgress({
+  // Sauvegarde complète de la progression
+  Future<void> saveProgress({
     required String uid,
     required int xp,
     required int hearts,
     required int streak,
     required List<String> completedLessons,
+    required int totalWordsLearned,
+    required int totalErrors,
   }) async {
     await _db.collection(_collection).doc(uid).update({
       'xp': xp,
       'hearts': hearts,
       'streak': streak,
       'completedLessons': completedLessons,
+      'totalWordsLearned': totalWordsLearned,
+      'totalErrors': totalErrors,
     });
   }
 
-  // ── Mettre à jour l'avatar ────────────────────────────────────────────────
   Future<void> updateAvatar({
     required String uid,
     required String avatar,
@@ -56,7 +57,6 @@ class UserService {
         .update({'avatar': avatar});
   }
 
-  // ── Mettre à jour l'objectif ─────────────────────────────────────────────
   Future<void> updateObjectif({
     required String uid,
     required String objectif,
@@ -67,19 +67,21 @@ class UserService {
         .update({'objectif': objectif});
   }
 
-  // ── Sauvegarder leçon complétée ──────────────────────────────────────────
   Future<void> completeLesson({
     required String uid,
     required String lessonId,
     required int xpGained,
+    required int wordsLearned,
+    required int errors,
   }) async {
     await _db.collection(_collection).doc(uid).update({
       'completedLessons': FieldValue.arrayUnion([lessonId]),
       'xp': FieldValue.increment(xpGained),
+      'totalWordsLearned': FieldValue.increment(wordsLearned),
+      'totalErrors': FieldValue.increment(errors),
     });
   }
 
-  // ── Stream de l'utilisateur (temps réel) ─────────────────────────────────
   Stream<UserModel?> userStream(String uid) {
     return _db
         .collection(_collection)

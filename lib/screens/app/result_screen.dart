@@ -2,8 +2,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../models/lesson_model.dart';
-import 'main_screen.dart';
 import '../../services/user_service.dart';
+import '../../services/notification_service.dart';
+import 'main_screen.dart';
 
 class ResultScreen extends StatefulWidget {
   final LessonModel lesson;
@@ -13,6 +14,7 @@ class ResultScreen extends StatefulWidget {
   final int accuracy;
   final UserProgress progress;
   final String uid;
+  final int errorCount;
 
   const ResultScreen({
     super.key,
@@ -23,6 +25,7 @@ class ResultScreen extends StatefulWidget {
     required this.accuracy,
     required this.progress,
     required this.uid,
+    required this.errorCount,
   });
 
   @override
@@ -47,36 +50,49 @@ class _ResultScreenState extends State<ResultScreen>
       _particles.add(_Particle(_rnd));
     }
     _main = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 800));
+        vsync: this,
+        duration: const Duration(milliseconds: 800));
     _confetti = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 2500));
+        vsync: this,
+        duration: const Duration(milliseconds: 2500));
     _xpCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1200));
+        vsync: this,
+        duration: const Duration(milliseconds: 1200));
     _scale = Tween<double>(begin: 0.3, end: 1.0).animate(
-        CurvedAnimation(parent: _main, curve: Curves.elasticOut));
+        CurvedAnimation(
+            parent: _main, curve: Curves.elasticOut));
     _fade = CurvedAnimation(
-        parent: _main, curve: const Interval(0, 0.5));
+        parent: _main,
+        curve: const Interval(0, 0.5));
     _xp = Tween<double>(
-            begin: 0, end: widget.earnedXP.toDouble())
-        .animate(CurvedAnimation(parent: _xpCtrl, curve: Curves.easeOut));
+            begin: 0,
+            end: widget.earnedXP.toDouble())
+        .animate(CurvedAnimation(
+            parent: _xpCtrl, curve: Curves.easeOut));
     _start();
   }
 
   Future<void> _start() async {
-   await Future.delayed(const Duration(milliseconds: 200));
-  _main.forward();
-  if (widget.accuracy >= 70) _confetti.repeat();
-  await Future.delayed(const Duration(milliseconds: 600));
-  _xpCtrl.forward();
+    await Future.delayed(const Duration(milliseconds: 200));
+    _main.forward();
+    if (widget.accuracy >= 70) _confetti.repeat();
+    await Future.delayed(const Duration(milliseconds: 600));
+    _xpCtrl.forward();
 
-  // ← Sauvegarde dans Firestore
-  if (widget.uid.isNotEmpty) {
-    await UserService().completeLesson(
-      uid: widget.uid,
-      lessonId: widget.lesson.id,
-      xpGained: widget.earnedXP,
-    );
-  }
+    // Sauvegarde dans Firestore
+    if (widget.uid.isNotEmpty) {
+      await UserService().completeLesson(
+        uid: widget.uid,
+        lessonId: widget.lesson.id,
+        xpGained: widget.earnedXP,
+        wordsLearned: widget.lesson.courseCards.length,
+        errors: widget.errorCount,
+      );
+
+      // Notification de félicitation
+      await NotificationService()
+          .showCongrats(widget.lesson.title);
+    }
   }
 
   @override
@@ -112,7 +128,8 @@ class _ResultScreenState extends State<ResultScreen>
               animation: _confetti,
               builder: (_, __) => CustomPaint(
                 painter: _ConfettiPainter(
-                    particles: _particles, t: _confetti.value),
+                    particles: _particles,
+                    t: _confetti.value),
                 child: const SizedBox.expand(),
               ),
             ),
@@ -125,19 +142,24 @@ class _ResultScreenState extends State<ResultScreen>
                   ScaleTransition(
                     scale: _scale,
                     child: Text(_emoji,
-                        style: const TextStyle(fontSize: 88)),
+                        style:
+                            const TextStyle(fontSize: 88)),
                   ),
                   const SizedBox(height: 16),
                   Text(_msg,
                       style: const TextStyle(
-                          fontSize: 34, fontWeight: FontWeight.w900)),
+                          fontSize: 34,
+                          fontWeight: FontWeight.w900)),
                   const SizedBox(height: 6),
-                  Text('Leçon "${widget.lesson.title}" terminée !',
-                      style:
-                          TextStyle(fontSize: 15, color: AppTheme.textGrey)),
+                  Text(
+                      'Leçon "${widget.lesson.title}" terminée !',
+                      style: TextStyle(
+                          fontSize: 15,
+                          color: AppTheme.textGrey)),
                   const SizedBox(height: 44),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24),
                     child: Row(children: [
                       _StatBox(
                         icon: '⚡',
@@ -180,18 +202,22 @@ class _ResultScreenState extends State<ResultScreen>
                   ),
                   const Spacer(),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                    padding: const EdgeInsets.fromLTRB(
+                        24, 0, 24, 32),
                     child: Column(children: [
                       SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
-                          onPressed: () => Navigator.pushAndRemoveUntil(
+                          onPressed: () =>
+                              Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
                                 builder: (_) => MainScreen(
-                                    progress: widget.progress,
-                                    uid: widget.uid)),
+                                      progress:
+                                          widget.progress,
+                                      uid: widget.uid,
+                                    )),
                             (_) => false,
                           ),
                           child: const Text('Continuer 🚀'),
@@ -199,11 +225,13 @@ class _ResultScreenState extends State<ResultScreen>
                       ),
                       const SizedBox(height: 10),
                       TextButton(
-                        onPressed: () => Navigator.pop(context, true),
+                        onPressed: () =>
+                            Navigator.pop(context, true),
                         child: Text('Refaire la leçon',
                             style: TextStyle(
                                 color: AppTheme.primary,
-                                fontWeight: FontWeight.w700)),
+                                fontWeight:
+                                    FontWeight.w700)),
                       ),
                     ]),
                   ),
@@ -222,26 +250,31 @@ class _StatBox extends StatelessWidget {
   final String label;
   final Widget child;
   const _StatBox(
-      {required this.icon, required this.label, required this.child});
+      {required this.icon,
+      required this.label,
+      required this.child});
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 6),
+        padding: const EdgeInsets.symmetric(
+            vertical: 16, horizontal: 6),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: AppTheme.border),
         ),
         child: Column(children: [
-          Text(icon, style: const TextStyle(fontSize: 22)),
+          Text(icon,
+              style: const TextStyle(fontSize: 22)),
           const SizedBox(height: 6),
           child,
           const SizedBox(height: 4),
           Text(label,
-              style:
-                  const TextStyle(fontSize: 10, color: AppTheme.textGrey),
+              style: const TextStyle(
+                  fontSize: 10,
+                  color: AppTheme.textGrey),
               textAlign: TextAlign.center),
         ]),
       ),
@@ -274,13 +307,15 @@ class _Particle {
 class _ConfettiPainter extends CustomPainter {
   final List<_Particle> particles;
   final double t;
-  const _ConfettiPainter({required this.particles, required this.t});
+  const _ConfettiPainter(
+      {required this.particles, required this.t});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
     for (final p in particles) {
-      final y = (t * p.speed * size.height * 1.5) % (size.height + 20);
+      final y =
+          (t * p.speed * size.height * 1.5) % (size.height + 20);
       paint.color = p.color.withOpacity(1 - t * 0.5);
       canvas.save();
       canvas.translate(p.x * size.width, y);

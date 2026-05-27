@@ -1,3 +1,4 @@
+import 'package:BillingueApp/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,14 +11,18 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+  // Init notifications
+  await NotificationService().init();
+
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp]);
+  SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
   ));
   runApp(const BillingueApp());
 }
-
 class BillingueApp extends StatelessWidget {
   const BillingueApp({super.key});
 

@@ -8,7 +8,12 @@ import 'chat_screen.dart';
 class MainScreen extends StatefulWidget {
   final UserProgress progress;
   final String uid;
-  const MainScreen({super.key, required this.progress,required this.uid,});
+
+  const MainScreen({
+    super.key,
+    required this.progress,
+    required this.uid,
+  });
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -17,30 +22,45 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _index = 0;
 
-  late final List<Widget> _screens;
-
   @override
   void initState() {
     super.initState();
-    _screens = [
-      HomeScreen(
-        progress: widget.progress,
-        onChanged: () => setState(() {}),
-      ),
-      const ChatScreen(),
-      const _Soon(icon: '🏆', label: 'Classement'),
-      ProfileScreen(progress: widget.progress, uid: '',),
-    ];
+    // Écoute les changements de progression pour rebuild auto
+    widget.progress.addListener(_onProgressChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.progress.removeListener(_onProgressChanged);
+    super.dispose();
+  }
+
+  void _onProgressChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      HomeScreen(
+        progress: widget.progress,
+        uid: widget.uid,
+      ),
+      const ChatScreen(),
+      const _Soon(icon: '🏆', label: 'Classement'),
+      ProfileScreen(
+        progress: widget.progress,
+        uid: widget.uid,
+      ),
+    ];
+
     return Scaffold(
-      body: IndexedStack(index: _index, children: _screens),
+      body: IndexedStack(index: _index, children: screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+          border:
+              Border(top: BorderSide(color: Colors.grey.shade200)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -90,8 +110,6 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-// ── Nav Item ──────────────────────────────────────────────────────────────────
-
 class _NavItem extends StatelessWidget {
   final String icon;
   final String label;
@@ -114,25 +132,22 @@ class _NavItem extends StatelessWidget {
       onTap: () => onTap(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              icon,
-              style: TextStyle(
-                fontSize: active ? 24 : 22,
-              ),
-            ),
+            Text(icon,
+                style: TextStyle(fontSize: active ? 24 : 22)),
             const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: active ? FontWeight.w800 : FontWeight.w500,
-                color: active ? AppTheme.primary : Colors.grey,
-              ),
-            ),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: active
+                        ? FontWeight.w800
+                        : FontWeight.w500,
+                    color:
+                        active ? AppTheme.primary : Colors.grey)),
             const SizedBox(height: 2),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -150,8 +165,6 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-// ── Placeholder écrans à venir ────────────────────────────────────────────────
-
 class _Soon extends StatelessWidget {
   final String icon;
   final String label;
@@ -167,18 +180,12 @@ class _Soon extends StatelessWidget {
           children: [
             Text(icon, style: const TextStyle(fontSize: 60)),
             const SizedBox(height: 16),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
-            Text(
-              'Bientôt disponible',
-              style: TextStyle(color: Colors.grey.shade500),
-            ),
+            Text('Bientôt disponible',
+                style: TextStyle(color: Colors.grey.shade500)),
           ],
         ),
       ),

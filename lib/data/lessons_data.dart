@@ -1,5 +1,4 @@
 import '../models/lesson_model.dart';
-import '';
 
 class LessonsData {
   static final List<LessonModel> allLessons = [

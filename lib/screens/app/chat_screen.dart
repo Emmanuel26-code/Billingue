@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../services/ai_service.dart';
-import '../../services/tts_service.dart';
+
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -12,7 +12,6 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final AiService _ai = AiService();
-  final TtsService _tts = TtsService();
   final TextEditingController _ctrl = TextEditingController();
   final ScrollController _scroll = ScrollController();
   final List<_Message> _messages = [];
@@ -22,7 +21,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _tts.init();
+   
     _sendWelcome();
   }
 
@@ -35,8 +34,6 @@ class _ChatScreenState extends State<ChatScreen> {
         _loading = false;
       });
       _scrollDown();
-      // Aya parle automatiquement au démarrage
-      await _speakMessage(response, _messages.last.id);
     }
   }
 
@@ -44,7 +41,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _ctrl.text.trim();
     if (text.isEmpty || _loading) return;
     _ctrl.clear();
-    await _tts.stop();
+    
 
     setState(() {
       _messages.add(_Message(text: text, isUser: true));
@@ -59,22 +56,21 @@ class _ChatScreenState extends State<ChatScreen> {
         _loading = false;
       });
       _scrollDown();
-      await _speakMessage(response, _messages.last.id);
     }
   }
 
   Future<void> _speakMessage(String text, String id) async {
     setState(() => _speakingId = id);
-    await _tts.speak(text);
+
     if (mounted) setState(() => _speakingId = null);
   }
 
   Future<void> _toggleSpeak(String text, String id) async {
     if (_speakingId == id) {
-      await _tts.stop();
+  
       setState(() => _speakingId = null);
     } else {
-      await _tts.stop();
+  
       await _speakMessage(text, id);
     }
   }
@@ -93,7 +89,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    _tts.dispose();
+  
     _ctrl.dispose();
     _scroll.dispose();
     super.dispose();
@@ -145,7 +141,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     if (_speakingId != null)
                       GestureDetector(
                         onTap: () async {
-                          await _tts.stop();
+                      
                           setState(() => _speakingId = null);
                         },
                         child: Container(
@@ -406,49 +402,6 @@ class _MessageBubble extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Bouton écouter (seulement pour Aya)
-                  if (!isUser) ...[
-                    const SizedBox(height: 4),
-                    GestureDetector(
-                      onTap: onSpeak,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: isSpeaking
-                              ? AppTheme.primary.withOpacity(0.15)
-                              : Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              isSpeaking
-                                  ? Icons.stop_rounded
-                                  : Icons.volume_up_rounded,
-                              size: 14,
-                              color: isSpeaking
-                                  ? AppTheme.primary
-                                  : Colors.grey,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              isSpeaking ? 'Stop' : 'Écouter',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: isSpeaking
-                                    ? AppTheme.primary
-                                    : Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),

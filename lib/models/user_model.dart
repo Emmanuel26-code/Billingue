@@ -1,4 +1,4 @@
-import 'package:BillingueApp/models/lesson_model.dart';
+import 'lesson_model.dart';
 
 class UserModel {
   final String uid;
@@ -12,6 +12,8 @@ class UserModel {
   final int hearts;
   final int streak;
   final List<String> completedLessons;
+  final int totalWordsLearned;
+  final int totalErrors;
   final DateTime createdAt;
 
   const UserModel({
@@ -26,10 +28,11 @@ class UserModel {
     this.hearts = 5,
     this.streak = 0,
     this.completedLessons = const [],
+    this.totalWordsLearned = 0,
+    this.totalErrors = 0,
     required this.createdAt,
   });
 
-  // Firestore → UserModel
   factory UserModel.fromMap(Map<String, dynamic> map, String uid) {
     return UserModel(
       uid: uid,
@@ -42,12 +45,14 @@ class UserModel {
       xp: map['xp'] ?? 0,
       hearts: map['hearts'] ?? 5,
       streak: map['streak'] ?? 0,
-      completedLessons: List<String>.from(map['completedLessons'] ?? []),
+      completedLessons:
+          List<String>.from(map['completedLessons'] ?? []),
+      totalWordsLearned: map['totalWordsLearned'] ?? 0,
+      totalErrors: map['totalErrors'] ?? 0,
       createdAt: map['createdAt']?.toDate() ?? DateTime.now(),
     );
   }
 
-  // UserModel → Firestore
   Map<String, dynamic> toMap() {
     return {
       'nom': nom,
@@ -60,11 +65,12 @@ class UserModel {
       'hearts': hearts,
       'streak': streak,
       'completedLessons': completedLessons,
+      'totalWordsLearned': totalWordsLearned,
+      'totalErrors': totalErrors,
       'createdAt': createdAt,
     };
   }
 
-  // Copie avec modifications
   UserModel copyWith({
     String? nom,
     String? prenom,
@@ -76,6 +82,8 @@ class UserModel {
     int? hearts,
     int? streak,
     List<String>? completedLessons,
+    int? totalWordsLearned,
+    int? totalErrors,
   }) {
     return UserModel(
       uid: uid,
@@ -89,11 +97,13 @@ class UserModel {
       hearts: hearts ?? this.hearts,
       streak: streak ?? this.streak,
       completedLessons: completedLessons ?? this.completedLessons,
+      totalWordsLearned:
+          totalWordsLearned ?? this.totalWordsLearned,
+      totalErrors: totalErrors ?? this.totalErrors,
       createdAt: createdAt,
     );
   }
 
-  // Convertir en UserProgress
   UserProgress toUserProgress() {
     return UserProgress(
       xp: xp,
@@ -101,7 +111,10 @@ class UserModel {
       streak: streak,
       avatar: avatar,
       nom: '$prenom $nom',
+      objectif: objectif,
       completedLessons: completedLessons.toSet(),
+      totalWordsLearned: totalWordsLearned,
+      totalErrors: totalErrors,
     );
   }
 }

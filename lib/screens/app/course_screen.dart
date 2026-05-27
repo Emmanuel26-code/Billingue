@@ -7,11 +7,13 @@ import 'lesson_screen.dart';
 class CourseScreen extends StatefulWidget {
   final LessonModel lesson;
   final UserProgress progress;
+  final String uid;
 
   const CourseScreen({
     super.key,
     required this.lesson,
     required this.progress,
+    required this.uid,
   });
 
   @override
@@ -66,6 +68,7 @@ class _CourseScreenState extends State<CourseScreen>
         pageBuilder: (_, anim, __) => LessonScreen(
           lesson: widget.lesson,
           progress: widget.progress,
+          uid: widget.uid,
         ),
         transitionsBuilder: (_, anim, __, child) => SlideTransition(
           position: Tween<Offset>(
