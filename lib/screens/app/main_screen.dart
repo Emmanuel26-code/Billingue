@@ -4,6 +4,7 @@ import '../../models/lesson_model.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'chat_screen.dart';
+import 'leaderboard_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final UserProgress progress;
@@ -47,7 +48,10 @@ class _MainScreenState extends State<MainScreen> {
         uid: widget.uid,
       ),
       const ChatScreen(),
-      const _Soon(icon: '🏆', label: 'Classement'),
+      LeaderboardScreen(
+        progress: widget.progress,
+        uid: widget.uid,
+      ),
       ProfileScreen(
         progress: widget.progress,
         uid: widget.uid,
@@ -158,34 +162,6 @@ class _NavItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Soon extends StatelessWidget {
-  final String icon;
-  final String label;
-  const _Soon({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(icon, style: const TextStyle(fontSize: 60)),
-            const SizedBox(height: 16),
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 22, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 8),
-            Text('Bientôt disponible',
-                style: TextStyle(color: Colors.grey.shade500)),
           ],
         ),
       ),

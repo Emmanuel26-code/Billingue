@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
-import '../services/speech_service.dart';
-import '../services/tts_service.dart';
+import '../services/asr_service.dart';
+import '../services/audio_service.dart';
 
 enum PronunciationState {
   idle,
   listening,
+  processing,
   success,
   failure,
   retry,
@@ -26,20 +27,20 @@ class PronunciationWidget extends StatefulWidget {
   });
 
   @override
-  State<PronunciationWidget> createState() => _PronunciationWidgetState();
+  State<PronunciationWidget> createState() =>
+      _PronunciationWidgetState();
 }
 
 class _PronunciationWidgetState extends State<PronunciationWidget>
     with TickerProviderStateMixin {
-  final SpeechService _speech = SpeechService();
-  final TtsService _tts = TtsService();
+  final AsrService _asr = AsrService();
+  final AudioService _audio = AudioService();
 
   PronunciationState _state = PronunciationState.idle;
   String _spokenText = '';
   int _attempts = 0;
   static const int _maxAttempts = 3;
 
-  // Animations
   late AnimationController _pulseCtrl;
   late AnimationController _shakeCtrl;
   late Animation<double> _pulse;
@@ -48,22 +49,20 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
   @override
   void initState() {
     super.initState();
-    _tts.init();
-    _speech.init();
-
     _pulseCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 700),
     );
     _shakeCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _pulse = Tween<double>(begin: 1.0, end: 1.2).animate(
+    _pulse = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
     );
     _shake = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _shakeCtrl, curve: Curves.elasticIn),
+      CurvedAnimation(
+          parent: _shakeCtrl, curve: Curves.elasticIn),
     );
   }
 
@@ -71,32 +70,51 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
   void dispose() {
     _pulseCtrl.dispose();
     _shakeCtrl.dispose();
-    _speech.dispose();
-    _tts.dispose();
+    _asr.dispose();
+    _audio.dispose();
     super.dispose();
   }
 
   Future<void> _startListening() async {
+    final hasPermission = await _asr.hasPermission();
+    if (!hasPermission) {
+      setState(() {
+        _state = PronunciationState.retry;
+        _spokenText = 'Permission microphone refusée';
+      });
+      return;
+    }
+
     setState(() {
       _state = PronunciationState.listening;
       _spokenText = '';
     });
     _pulseCtrl.repeat(reverse: true);
 
-    final spoken = await _speech.listen();
+    await _asr.startRecording();
 
+    // Enregistre pendant 3 secondes
+    await Future.delayed(const Duration(seconds: 3));
+
+    setState(() => _state = PronunciationState.processing);
     _pulseCtrl.stop();
     _pulseCtrl.reset();
 
-    if (spoken.isEmpty) {
-      setState(() => _state = PronunciationState.retry);
+    // Envoie au modèle Hugging Face
+    final spoken = await _asr.stopAndTranscribe();
+
+    if (spoken == null || spoken.isEmpty) {
+      setState(() {
+        _state = PronunciationState.retry;
+        _spokenText = 'Rien entendu, réessaie...';
+      });
       return;
     }
 
     setState(() => _spokenText = spoken);
 
     final correct =
-        _speech.checkPronunciation(spoken, widget.wordToSay);
+        _asr.checkPronunciation(spoken, widget.wordToSay);
 
     if (correct) {
       setState(() => _state = PronunciationState.success);
@@ -110,7 +128,7 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
   }
 
   Future<void> _listenExample() async {
-    await _tts.speakBaoule(widget.wordToSay);
+    await _audio.playWord(widget.wordToSay);
   }
 
   void _retry() {
@@ -127,8 +145,8 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
       children: [
         // Instruction
         Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
             color: Colors.purple.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
@@ -149,86 +167,82 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
             ],
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 20),
 
         // Carte du mot
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: _borderColor,
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _borderColor.withOpacity(0.15),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Mot à prononcer
-              AnimatedBuilder(
-                animation: _shake,
-                builder: (_, child) {
-                  final dx = _state == PronunciationState.failure
-                      ? 8 *
-                          (_shake.value < 0.5
-                              ? -(_shake.value * 2)
-                              : (_shake.value - 0.5) * 2) *
-                          (1 - _shake.value)
-                      : 0.0;
-                  return Transform.translate(
-                    offset: Offset(dx, 0),
-                    child: child,
-                  );
-                },
-                child: Text(
-                  widget.wordToSay,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    color: _textColor,
-                  ),
-                  textAlign: TextAlign.center,
+        AnimatedBuilder(
+          animation: _shake,
+          builder: (_, child) {
+            final dx =
+                _state == PronunciationState.failure
+                    ? 8 *
+                        (_shake.value < 0.5
+                            ? -(_shake.value * 2)
+                            : (_shake.value - 0.5) * 2) *
+                        (1 - _shake.value)
+                    : 0.0;
+            return Transform.translate(
+                offset: Offset(dx, 0), child: child);
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                  color: _borderColor, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: _borderColor.withOpacity(0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
+              ],
+            ),
+            child: Column(children: [
+              Text(
+                widget.wordToSay,
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  color: _textColor,
+                ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),
-              Text(
-                widget.translation,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppTheme.textGrey,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text(widget.translation,
+                  style: TextStyle(
+                      fontSize: 16,
+                      color: AppTheme.textGrey)),
               const SizedBox(height: 16),
 
-              // Bouton écouter l'exemple
+              // Bouton écouter le vrai audio
               GestureDetector(
                 onTap: _listenExample,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
+                    color:
+                        AppTheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                        color: AppTheme.primary.withOpacity(0.3)),
+                        color: AppTheme.primary
+                            .withOpacity(0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.volume_up_rounded,
-                          color: AppTheme.primary, size: 16),
+                          color: AppTheme.primary,
+                          size: 16),
                       const SizedBox(width: 6),
                       Text(
-                        'Écouter la prononciation',
+                        AudioService.hasAudio(
+                                widget.wordToSay)
+                            ? 'Écouter (audio réel 🎙️)'
+                            : 'Écouter (synthèse)',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -239,12 +253,12 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
                   ),
                 ),
               ),
-            ],
+            ]),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
 
-        // Ce que l'utilisateur a dit
+        // Résultat de la reconnaissance
         if (_spokenText.isNotEmpty)
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
@@ -261,47 +275,49 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
                     : AppTheme.danger,
               ),
             ),
-            child: Row(
-              children: [
-                Text(
-                  _state == PronunciationState.success ? '✅' : '❌',
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _state == PronunciationState.success
-                            ? 'Bonne prononciation !'
-                            : 'Tu as dit : "$_spokenText"',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: _state == PronunciationState.success
-                              ? AppTheme.secondaryDark
-                              : AppTheme.danger,
-                        ),
+            child: Row(children: [
+              Text(
+                _state == PronunciationState.success
+                    ? '✅'
+                    : '❌',
+                style: const TextStyle(fontSize: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _state == PronunciationState.success
+                          ? 'Bonne prononciation ! 🎉'
+                          : 'Tu as dit : "$_spokenText"',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: _state ==
+                                PronunciationState.success
+                            ? AppTheme.secondaryDark
+                            : AppTheme.danger,
                       ),
-                      if (_state == PronunciationState.failure) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          'On attendait : "${widget.wordToSay}"',
-                          style: TextStyle(
+                    ),
+                    if (_state ==
+                        PronunciationState.failure) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        'On attendait : "${widget.wordToSay}"',
+                        style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textGrey,
-                          ),
-                        ),
-                      ],
+                            color: AppTheme.textGrey),
+                      ),
                     ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ]),
           ),
 
-        // Tentatives restantes
+        // Tentatives
         if (_state == PronunciationState.failure &&
             _attempts < _maxAttempts) ...[
           const SizedBox(height: 10),
@@ -319,65 +335,63 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
 
         const SizedBox(height: 16),
 
-        // Boutons
-        if (_state == PronunciationState.idle ||
-            _state == PronunciationState.retry)
-          _buildMicButton()
-        else if (_state == PronunciationState.listening)
-          _buildListeningButton()
-        else if (_state == PronunciationState.failure)
-          _buildFailureButtons()
-        else if (_state == PronunciationState.success)
-          _buildSuccessButton(),
+        // Boutons selon état
+        _buildButtons(),
       ],
     );
   }
 
-  // ── Boutons ───────────────────────────────────────────────────────────────
+  Widget _buildButtons() {
+    switch (_state) {
+      case PronunciationState.idle:
+      case PronunciationState.retry:
+        return _buildMicButton();
+      case PronunciationState.listening:
+        return _buildListeningButton();
+      case PronunciationState.processing:
+        return _buildProcessingButton();
+      case PronunciationState.failure:
+        return _buildFailureButtons();
+      case PronunciationState.success:
+        return _buildSuccessButton();
+    }
+  }
 
   Widget _buildMicButton() {
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: _startListening,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.mic_rounded, size: 22),
-                SizedBox(width: 10),
-                Text(
-                  'Appuie pour parler',
+    return Column(children: [
+      SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton(
+          onPressed: _startListening,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.purple,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.mic_rounded, size: 22),
+              SizedBox(width: 10),
+              Text('Appuie et prononce',
                   style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800)),
+            ],
           ),
         ),
-        const SizedBox(height: 10),
-        // Passer si trop difficile
-        TextButton(
-          onPressed: widget.onSkip,
-          child: Text(
-            'Passer cette question',
+      ),
+      const SizedBox(height: 10),
+      TextButton(
+        onPressed: widget.onSkip,
+        child: Text('Passer cette question',
             style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    );
+                color: Colors.grey.shade500,
+                fontSize: 13)),
+      ),
+    ]);
   }
 
   Widget _buildListeningButton() {
@@ -400,84 +414,103 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
-            Icon(Icons.mic_rounded, color: Colors.white, size: 24),
+            Icon(Icons.mic_rounded,
+                color: Colors.white, size: 24),
             SizedBox(width: 10),
-            Text(
-              'Écoute en cours...',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+            Text('Écoute (3 sec)...',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFailureButtons() {
-    return Column(
-      children: [
-        if (_attempts < _maxAttempts)
+  Widget _buildProcessingButton() {
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.orange.shade400,
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
           SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: _retry,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.refresh_rounded, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Réessayer',
-                    style: TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w800),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          // Max tentatives atteint → passer automatiquement
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: widget.onSkip,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.danger,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28)),
-              ),
-              child: const Text(
-                'Continuer quand même →',
-                style: TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w800),
-              ),
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 2.5,
             ),
           ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: widget.onSkip,
-          child: Text(
-            'Passer cette question',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 13,
+          const SizedBox(width: 12),
+          const Text('Analyse en cours...',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFailureButtons() {
+    return Column(children: [
+      if (_attempts < _maxAttempts)
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton(
+            onPressed: _retry,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28)),
             ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.refresh_rounded, size: 20),
+                SizedBox(width: 8),
+                Text('Réessayer',
+                    style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800)),
+              ],
+            ),
+          ),
+        )
+      else
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton(
+            onPressed: widget.onSkip,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.danger,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28)),
+            ),
+            child: const Text('Continuer quand même →',
+                style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800)),
           ),
         ),
-      ],
-    );
+      const SizedBox(height: 8),
+      TextButton(
+        onPressed: widget.onSkip,
+        child: Text('Passer',
+            style: TextStyle(
+                color: Colors.grey.shade500, fontSize: 13)),
+      ),
+    ]);
   }
 
   Widget _buildSuccessButton() {
@@ -491,27 +524,25 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: const [
-          Icon(Icons.check_circle, color: Colors.white, size: 22),
+          Icon(Icons.check_circle,
+              color: Colors.white, size: 22),
           SizedBox(width: 8),
-          Text(
-            'Parfait ! Continuer →',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
+          Text('Parfait ! Continuer →',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800)),
         ],
       ),
     );
   }
 
-  // ── Couleurs selon état ───────────────────────────────────────────────────
-
   Color get _borderColor {
     switch (_state) {
       case PronunciationState.listening:
-        return Colors.purple;
+        return Colors.red;
+      case PronunciationState.processing:
+        return Colors.orange;
       case PronunciationState.success:
         return AppTheme.secondary;
       case PronunciationState.failure:
@@ -528,7 +559,9 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
       case PronunciationState.failure:
         return AppTheme.danger;
       case PronunciationState.listening:
-        return Colors.purple;
+        return Colors.red;
+      case PronunciationState.processing:
+        return Colors.orange;
       default:
         return AppTheme.textDark;
     }

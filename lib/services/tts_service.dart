@@ -1,4 +1,5 @@
 import 'package:flutter_tts/flutter_tts.dart';
+import 'audio_service.dart';
 
 class TtsService {
   static final TtsService _instance = TtsService._internal();
@@ -6,6 +7,7 @@ class TtsService {
   TtsService._internal();
 
   final FlutterTts _tts = FlutterTts();
+  final AudioService _audio = AudioService();
   bool _isPlaying = false;
 
   bool get isPlaying => _isPlaying;
@@ -15,31 +17,34 @@ class TtsService {
     await _tts.setSpeechRate(0.45);
     await _tts.setVolume(1.0);
     await _tts.setPitch(1.1);
-
-    _tts.setStartHandler(() => _isPlaying = true);
     _tts.setCompletionHandler(() => _isPlaying = false);
     _tts.setErrorHandler((_) => _isPlaying = false);
   }
 
-  Future<void> speak(String text) async {
+  /// Joue le vrai audio si disponible, sinon TTS de secours
+  Future<void> speakBaoule(String word) async {
     if (_isPlaying) await stop();
-    await _tts.speak(text);
     _isPlaying = true;
+
+    // Essaie d'abord le vrai audio enregistré
+    final played = await _audio.playWord(word);
+
+    // Si pas d'audio disponible → TTS de secours
+    if (!played) {
+      await _tts.speak(word);
+    }
+
+    _isPlaying = false;
   }
 
   Future<void> stop() async {
     await _tts.stop();
+    await _audio.stop();
     _isPlaying = false;
-  }
-
-  Future<void> speakBaoule(String word) async {
-    // Vitesse plus lente pour les mots Baoulé
-    await _tts.setSpeechRate(0.35);
-    await speak(word);
-    await _tts.setSpeechRate(0.45);
   }
 
   void dispose() {
     _tts.stop();
+    _audio.dispose();
   }
 }

@@ -1,3 +1,5 @@
+import 'package:BillingueApp/screens/app/badges_screen.dart';
+import 'package:BillingueApp/screens/app/logout_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../data/lessons_data.dart';
@@ -8,6 +10,7 @@ import '../../services/notification_service.dart';
 import '../../widgets/avatar_picker.dart';
 import '../auth/welcome_screen.dart';
 import 'stats_screen.dart';
+import '../../widgets/loading_overlay.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserProgress progress;
@@ -297,6 +300,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 }),
 
+                _Item('🏅', const Color(0xFFFFF8E1),
+                   'Mes badges', null, () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => BadgesScreen(progress: widget.progress),
+                      ),
+                  );
+              }),
+
                 // Notifications avec toggle
                 Container(
                   margin: const EdgeInsets.only(bottom: 10),
@@ -391,7 +404,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                   );
-                  if (confirm == true) await _logout();
+                  if (confirm == true && mounted) {
+                     Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (_, anim, __) => LogoutScreen(
+                            progress: widget.progress,
+                            uid: widget.uid,
+                          ),
+                          transitionsBuilder: (_, anim, __, child) =>
+                            FadeTransition(opacity: anim, child: child),
+                          transitionDuration: const Duration(milliseconds: 400),
+                        ),
+                     );
+                   }
                 }),
               ]),
             ),

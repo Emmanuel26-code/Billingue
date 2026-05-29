@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../models/lesson_model.dart';
 import '../../services/tts_service.dart';
+import '../../widgets/loading_overlay.dart';
 import 'lesson_screen.dart';
 
 class CourseScreen extends StatefulWidget {
@@ -27,14 +29,77 @@ class _CourseScreenState extends State<CourseScreen>
   int _currentIndex = 0;
   bool _isSpeaking = false;
 
+  // Timer
+  late Timer _timer;
+  late int _totalSeconds;
+  int _secondsElapsed = 0;
+
   @override
   void initState() {
     super.initState();
     _tts.init();
+    _totalSeconds = _getTimeForObjectif(widget.progress.objectif);
+    _startTimer();
+  }
+
+  int _getTimeForObjectif(String objectif) {
+    switch (objectif) {
+      case 'Moyens':
+        return 5 * 60;
+      case 'Regulier':
+        return 10 * 60;
+      case 'Sérieux':
+        return 15 * 60;
+      case 'Intense':
+        return 20 * 60;
+      default:
+        return 10 * 60;
+    }
+  }
+
+  String get _objectifEmoji {
+    switch (widget.progress.objectif) {
+      case 'Moyens':
+        return '🟢';
+      case 'Regulier':
+        return '🔵';
+      case 'Sérieux':
+        return '🟡';
+      case 'Intense':
+        return '🔴';
+      default:
+        return '🔵';
+    }
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() => _secondsElapsed++);
+      }
+    });
+  }
+
+  String get _timeRemaining {
+    final remaining = _totalSeconds - _secondsElapsed;
+    if (remaining <= 0) return '0:00';
+    final m = remaining ~/ 60;
+    final s = remaining % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
+  double get _timeProgress =>
+      (_secondsElapsed / _totalSeconds).clamp(0.0, 1.0);
+
+  Color get _timeColor {
+    if (_timeProgress < 0.6) return AppTheme.secondary;
+    if (_timeProgress < 0.85) return Colors.orange;
+    return AppTheme.danger;
   }
 
   @override
   void dispose() {
+    _timer.cancel();
     _tts.dispose();
     _pageCtrl.dispose();
     super.dispose();
@@ -61,6 +126,7 @@ class _CourseScreenState extends State<CourseScreen>
   }
 
   void _goToQuiz() {
+    _timer.cancel();
     _tts.stop();
     Navigator.pushReplacement(
       context,
@@ -74,7 +140,8 @@ class _CourseScreenState extends State<CourseScreen>
           position: Tween<Offset>(
             begin: const Offset(1, 0),
             end: Offset.zero,
-          ).animate(CurvedAnimation(parent: anim, curve: Curves.easeInOut)),
+          ).animate(
+              CurvedAnimation(parent: anim, curve: Curves.easeInOut)),
           child: child,
         ),
         transitionDuration: const Duration(milliseconds: 400),
@@ -103,8 +170,7 @@ class _CourseScreenState extends State<CourseScreen>
       body: SafeArea(
         child: Column(
           children: [
-
-            // ── Top bar ───────────────────────────────────────
+            // ── Top bar ─────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
@@ -143,14 +209,16 @@ class _CourseScreenState extends State<CourseScreen>
                               begin: 0,
                               end: (_currentIndex + 1) / total,
                             ),
-                            duration: const Duration(milliseconds: 400),
-                            builder: (_, v, __) => LinearProgressIndicator(
+                            duration:
+                                const Duration(milliseconds: 400),
+                            builder: (_, v, __) =>
+                                LinearProgressIndicator(
                               value: v,
                               backgroundColor: Colors.grey.shade200,
                               valueColor:
                                   const AlwaysStoppedAnimation<Color>(
                                       AppTheme.primary),
-                              minHeight: 8,
+                              minHeight: 7,
                             ),
                           ),
                         ),
@@ -158,7 +226,6 @@ class _CourseScreenState extends State<CourseScreen>
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Compteur
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 5),
@@ -179,21 +246,93 @@ class _CourseScreenState extends State<CourseScreen>
               ),
             ),
 
-            // ── Label COURS ───────────────────────────────────
+            // ── Barre de temps ───────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding:
+                  const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                      color: _timeColor.withOpacity(0.3)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(children: [
+                          Text(_objectifEmoji,
+                              style:
+                                  const TextStyle(fontSize: 14)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Objectif ${widget.progress.objectif}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textDark,
+                            ),
+                          ),
+                        ]),
+                        Row(children: [
+                          Icon(Icons.timer_outlined,
+                              size: 14, color: _timeColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            _secondsElapsed > _totalSeconds
+                                ? 'Temps dépassé !'
+                                : 'Reste : $_timeRemaining',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: _timeColor,
+                            ),
+                          ),
+                        ]),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: AnimatedContainer(
+                        duration: const Duration(seconds: 1),
+                        child: LinearProgressIndicator(
+                          value: _timeProgress,
+                          backgroundColor: Colors.grey.shade100,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(
+                                  _timeColor),
+                          minHeight: 6,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Label COURS ──────────────────────────────────
+            Padding(
+              padding:
+                  const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF5B4FCF).withOpacity(0.1),
+                      color: const Color(0xFF5B4FCF)
+                          .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: const [
-                        Text('📖', style: TextStyle(fontSize: 13)),
+                        Text('📖',
+                            style: TextStyle(fontSize: 13)),
                         SizedBox(width: 5),
                         Text(
                           'COURS',
@@ -211,7 +350,7 @@ class _CourseScreenState extends State<CourseScreen>
               ),
             ),
 
-            // ── Cards ─────────────────────────────────────────
+            // ── Cards ────────────────────────────────────────
             Expanded(
               child: PageView.builder(
                 controller: _pageCtrl,
@@ -227,7 +366,8 @@ class _CourseScreenState extends State<CourseScreen>
                   final card = cards[i];
                   return TweenAnimationBuilder<double>(
                     tween: Tween(begin: 0, end: 1),
-                    duration: const Duration(milliseconds: 400),
+                    duration:
+                        const Duration(milliseconds: 400),
                     curve: Curves.easeOut,
                     builder: (_, v, child) => Opacity(
                       opacity: v,
@@ -239,23 +379,25 @@ class _CourseScreenState extends State<CourseScreen>
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment:
+                            MainAxisAlignment.center,
                         children: [
-
                           // Carte principale
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.all(32),
+                            padding: const EdgeInsets.all(28),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius:
+                                  BorderRadius.circular(24),
                               border: Border.all(
-                                  color: AppTheme.primary.withOpacity(0.2),
+                                  color: AppTheme.primary
+                                      .withOpacity(0.2),
                                   width: 2),
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      AppTheme.primary.withOpacity(0.08),
+                                  color: AppTheme.primary
+                                      .withOpacity(0.08),
                                   blurRadius: 20,
                                   offset: const Offset(0, 8),
                                 ),
@@ -263,18 +405,14 @@ class _CourseScreenState extends State<CourseScreen>
                             ),
                             child: Column(
                               children: [
-                                // Emoji leçon
-                                Text(
-                                  widget.lesson.emoji,
-                                  style: const TextStyle(fontSize: 48),
-                                ),
-                                const SizedBox(height: 24),
-
-                                // Mot en Baoulé
+                                Text(widget.lesson.emoji,
+                                    style: const TextStyle(
+                                        fontSize: 44)),
+                                const SizedBox(height: 20),
                                 Text(
                                   card.baoule,
                                   style: const TextStyle(
-                                    fontSize: 36,
+                                    fontSize: 34,
                                     fontWeight: FontWeight.w900,
                                     color: AppTheme.primary,
                                     height: 1.2,
@@ -282,69 +420,71 @@ class _CourseScreenState extends State<CourseScreen>
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 8),
-
-                                // Séparateur
                                 Container(
                                   width: 40,
                                   height: 3,
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primary.withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(2),
+                                    color: AppTheme.primary
+                                        .withOpacity(0.3),
+                                    borderRadius:
+                                        BorderRadius.circular(2),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-
-                                // Traduction française
                                 Text(
                                   card.francais,
                                   style: TextStyle(
-                                    fontSize: 22,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.w700,
                                     color: AppTheme.textDark,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-                                const SizedBox(height: 20),
-
-                                // Bouton écouter
+                                const SizedBox(height: 18),
                                 GestureDetector(
-                                  onTap: () => _speak(card.baoule),
+                                  onTap: () =>
+                                      _speak(card.baoule),
                                   child: AnimatedContainer(
-                                    duration:
-                                        const Duration(milliseconds: 200),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 20, vertical: 10),
+                                    duration: const Duration(
+                                        milliseconds: 200),
+                                    padding:
+                                        const EdgeInsets.symmetric(
+                                            horizontal: 18,
+                                            vertical: 10),
                                     decoration: BoxDecoration(
                                       color: _isSpeaking
                                           ? AppTheme.primary
-                                          : AppTheme.primary.withOpacity(0.1),
+                                          : AppTheme.primary
+                                              .withOpacity(0.1),
                                       borderRadius:
                                           BorderRadius.circular(24),
                                       border: Border.all(
-                                        color: AppTheme.primary
-                                            .withOpacity(0.3),
-                                      ),
+                                          color: AppTheme.primary
+                                              .withOpacity(0.3)),
                                     ),
                                     child: Row(
-                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisSize:
+                                          MainAxisSize.min,
                                       children: [
                                         Icon(
                                           _isSpeaking
                                               ? Icons.stop_rounded
-                                              : Icons.volume_up_rounded,
+                                              : Icons
+                                                  .volume_up_rounded,
                                           color: _isSpeaking
                                               ? Colors.white
                                               : AppTheme.primary,
-                                          size: 20,
+                                          size: 18,
                                         ),
-                                        const SizedBox(width: 8),
+                                        const SizedBox(width: 7),
                                         Text(
                                           _isSpeaking
                                               ? 'Stop'
-                                              : 'Écouter la prononciation',
+                                              : 'Écouter',
                                           style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w700,
+                                            fontSize: 13,
+                                            fontWeight:
+                                                FontWeight.w700,
                                             color: _isSpeaking
                                                 ? Colors.white
                                                 : AppTheme.primary,
@@ -358,15 +498,16 @@ class _CourseScreenState extends State<CourseScreen>
                             ),
                           ),
 
-                          // Exemple si disponible
+                          // Exemple
                           if (card.exemple != null) ...[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 14),
                             Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF0FFF5),
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius:
+                                    BorderRadius.circular(16),
                                 border: Border.all(
                                     color: AppTheme.secondary
                                         .withOpacity(0.3)),
@@ -377,51 +518,46 @@ class _CourseScreenState extends State<CourseScreen>
                                 children: [
                                   Row(children: [
                                     const Text('💬',
-                                        style: TextStyle(fontSize: 14)),
+                                        style: TextStyle(
+                                            fontSize: 13)),
                                     const SizedBox(width: 6),
-                                    Text(
-                                      'Exemple',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppTheme.secondaryDark,
-                                      ),
-                                    ),
+                                    Text('Exemple',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight:
+                                              FontWeight.w800,
+                                          color: AppTheme
+                                              .secondaryDark,
+                                        )),
                                   ]),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    card.exemple!,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppTheme.textDark,
-                                    ),
-                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(card.exemple!,
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight:
+                                              FontWeight.w700,
+                                          color:
+                                              AppTheme.textDark)),
                                   if (card.exempeFr != null) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      card.exempeFr!,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: AppTheme.textGrey,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(card.exempeFr!,
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color:
+                                                AppTheme.textGrey,
+                                            fontStyle:
+                                                FontStyle.italic)),
                                   ],
                                 ],
                               ),
                             ),
                           ],
 
-                          // Indication swipe
-                          const SizedBox(height: 16),
-                          Text(
-                            'Swipe pour naviguer',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade400,
-                            ),
-                          ),
+                          const SizedBox(height: 12),
+                          Text('Swipe pour naviguer',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade400)),
                         ],
                       ),
                     ),
@@ -430,12 +566,12 @@ class _CourseScreenState extends State<CourseScreen>
               ),
             ),
 
-            // ── Navigation ────────────────────────────────────
+            // ── Navigation ───────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              padding:
+                  const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Row(
                 children: [
-                  // Bouton précédent
                   if (_currentIndex > 0)
                     GestureDetector(
                       onTap: _prev,
@@ -446,18 +582,18 @@ class _CourseScreenState extends State<CourseScreen>
                           color: Colors.white,
                           shape: BoxShape.circle,
                           border: Border.all(
-                              color: Colors.grey.shade200, width: 2),
+                              color: Colors.grey.shade200,
+                              width: 2),
                         ),
-                        child: const Icon(Icons.arrow_back_ios_rounded,
-                            size: 18, color: AppTheme.textDark),
+                        child: const Icon(
+                            Icons.arrow_back_ios_rounded,
+                            size: 18,
+                            color: AppTheme.textDark),
                       ),
                     )
                   else
                     const SizedBox(width: 50),
-
                   const SizedBox(width: 12),
-
-                  // Bouton suivant / commencer quiz
                   Expanded(
                     child: SizedBox(
                       height: 52,
@@ -470,7 +606,8 @@ class _CourseScreenState extends State<CourseScreen>
                                   : AppTheme.primary,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(28)),
+                              borderRadius:
+                                  BorderRadius.circular(28)),
                         ),
                         child: Text(
                           _currentIndex == total - 1
@@ -488,23 +625,22 @@ class _CourseScreenState extends State<CourseScreen>
               ),
             ),
 
-            // ── Dots indicateurs ──────────────────────────────
+            // Dots
             Padding(
-              padding: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.only(bottom: 14),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
                   total > 10 ? 10 : total,
                   (i) {
-                    final idx = total > 10
-                        ? (i * total ~/ 10)
-                        : i;
                     final active = total > 10
                         ? (_currentIndex * 10 ~/ total == i)
-                        : (_currentIndex == idx);
+                        : (_currentIndex == i);
                     return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      duration:
+                          const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 3),
                       width: active ? 20 : 6,
                       height: 6,
                       decoration: BoxDecoration(

@@ -1,3 +1,4 @@
+import 'package:BillingueApp/screens/app/revision_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../data/lessons_data.dart';
@@ -28,10 +29,8 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 700));
-    _anim =
-        CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+        vsync: this, duration: const Duration(milliseconds: 700));
+    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
     _ctrl.forward();
 
     // Écoute les changements automatiques
@@ -50,11 +49,9 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   List<LessonModel> get _lessons {
-    final list =
-        List<LessonModel>.from(LessonsData.allLessons);
+    final list = List<LessonModel>.from(LessonsData.allLessons);
     for (int i = 0; i < list.length; i++) {
-      final done =
-          widget.progress.isLessonCompleted(list[i].id);
+      final done = widget.progress.isLessonCompleted(list[i].id);
       if (i == 0 || done) {
         if (i + 1 < list.length) {
           list[i + 1] = LessonModel(
@@ -82,16 +79,12 @@ class _HomeScreenState extends State<HomeScreen>
           progress: widget.progress,
           uid: widget.uid,
         ),
-        transitionsBuilder: (_, anim, __, child) =>
-            SlideTransition(
-          position: Tween<Offset>(
-                  begin: const Offset(1, 0), end: Offset.zero)
-              .animate(CurvedAnimation(
-                  parent: anim, curve: Curves.easeInOut)),
+        transitionsBuilder: (_, anim, __, child) => SlideTransition(
+          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+              .animate(CurvedAnimation(parent: anim, curve: Curves.easeInOut)),
           child: child,
         ),
-        transitionDuration:
-            const Duration(milliseconds: 350),
+        transitionDuration: const Duration(milliseconds: 350),
       ),
     );
   }
@@ -99,8 +92,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final lessons = _lessons;
-    final done =
-        widget.progress.completedLessons.length;
+    final done = widget.progress.completedLessons.length;
     final total = LessonsData.allLessons.length;
 
     return Scaffold(
@@ -112,8 +104,7 @@ class _HomeScreenState extends State<HomeScreen>
               opacity: _anim,
               child: SlideTransition(
                 position: Tween<Offset>(
-                        begin: const Offset(0, -0.15),
-                        end: Offset.zero)
+                        begin: const Offset(0, -0.15), end: Offset.zero)
                     .animate(_anim),
                 child: _Header(
                   progress: widget.progress,
@@ -125,17 +116,83 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding:
-                  const EdgeInsets.fromLTRB(20, 22, 20, 6),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RevisionScreen(
+                      progress: widget.progress,
+                      uid: widget.uid,
+                    ),
+                  ),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.purple.shade400,
+                        Colors.purple.shade700,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.purple.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                          child: Text('🔄', style: TextStyle(fontSize: 24))),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Mode Révision',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800)),
+                          Text(
+                            'Révise les leçons déjà apprises',
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios,
+                        color: Colors.white, size: 16),
+                  ]),
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 6),
               child: Row(children: [
                 const Text('Unités',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800)),
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppTheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -153,18 +210,15 @@ class _HomeScreenState extends State<HomeScreen>
             delegate: SliverChildBuilderDelegate(
               (_, i) {
                 final lesson = lessons[i];
-                final completed = widget.progress
-                    .isLessonCompleted(lesson.id);
+                final completed = widget.progress.isLessonCompleted(lesson.id);
                 return TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0, end: 1),
-                  duration: Duration(
-                      milliseconds: 350 + i * 80),
+                  duration: Duration(milliseconds: 350 + i * 80),
                   curve: Curves.easeOut,
                   builder: (_, v, child) => Opacity(
                     opacity: v,
                     child: Transform.translate(
-                        offset: Offset(0, 20 * (1 - v)),
-                        child: child),
+                        offset: Offset(0, 20 * (1 - v)), child: child),
                   ),
                   child: LessonCard(
                     lesson: lesson,
@@ -177,8 +231,7 @@ class _HomeScreenState extends State<HomeScreen>
               childCount: lessons.length,
             ),
           ),
-          const SliverToBoxAdapter(
-              child: SizedBox(height: 30)),
+          const SliverToBoxAdapter(child: SizedBox(height: 30)),
         ],
       ),
     );
@@ -233,39 +286,32 @@ class _Header extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding:
-              const EdgeInsets.fromLTRB(20, 14, 20, 22),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 22),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text('Billingue',
                           style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w900,
                               color: Colors.white)),
-                      Text(
-                          'Objectif : ${progress.objectif}',
+                      Text('Objectif : ${progress.objectif}',
                           style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white
-                                  .withOpacity(0.85))),
+                              color: Colors.white.withOpacity(0.85))),
                     ],
                   ),
                   // Avatar mis à jour automatiquement
                   CircleAvatar(
                     radius: 22,
-                    backgroundColor:
-                        Colors.white.withOpacity(0.2),
-                    backgroundImage:
-                        AssetImage(progress.avatar),
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    backgroundImage: AssetImage(progress.avatar),
                   ),
                 ],
               ),
@@ -277,15 +323,13 @@ class _Header extends StatelessWidget {
                 const SizedBox(width: 8),
                 _Chip('❤️', '${progress.hearts} vies'),
                 const SizedBox(width: 8),
-                _Chip('📖',
-                    '${progress.totalWordsLearned} mots'),
+                _Chip('📖', '${progress.totalWordsLearned} mots'),
               ]),
               const SizedBox(height: 12),
 
               // Barre XP dynamique
               Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('XP : ${progress.xp} / $_xpMax',
                       style: TextStyle(
@@ -304,10 +348,8 @@ class _Header extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
                 child: LinearProgressIndicator(
                   value: _xpProgress,
-                  backgroundColor:
-                      Colors.white.withOpacity(0.3),
-                  valueColor: const AlwaysStoppedAnimation
-                      <Color>(Colors.white),
+                  backgroundColor: Colors.white.withOpacity(0.3),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                   minHeight: 8,
                 ),
               ),
@@ -327,8 +369,7 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: 8, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(18),
