@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import '../core/secrets.dart';
+import 'package:http_parser/http_parser.dart';
+
 
 class AsrService {
   static final AsrService _instance = AsrService._internal();
@@ -21,70 +25,202 @@ class AsrService {
   }
 
   Future<void> startRecording() async {
-    if (!await hasPermission()) return;
-
-    final dir = await getTemporaryDirectory();
-    _recordingPath =
-        '${dir.path}/baoule_recording_${DateTime.now().millisecondsSinceEpoch}.wav';
-
-    await _recorder.start(
-      RecordConfig(
-        encoder: AudioEncoder.wav,
-        sampleRate: 16000,
-        numChannels: 1,
-      ),
-      path: _recordingPath!,
-    );
-    _isRecording = true;
+  if (!await hasPermission()) {
+    debugPrint('❌ Permission micro refusée');
+    return;
   }
+
+  final dir = await getTemporaryDirectory();
+  _recordingPath =
+      '${dir.path}/baoule_${DateTime.now().millisecondsSinceEpoch}.wav';
+
+  debugPrint('🎙️ Début enregistrement : $_recordingPath');
+
+  await _recorder.start(
+    const RecordConfig(
+      encoder: AudioEncoder.wav,
+      sampleRate: 16000,
+      numChannels: 1,
+      bitRate: 128000,
+    ),
+    path: _recordingPath!,
+  );
+  _isRecording = true;
+  debugPrint('🔴 Enregistrement en cours...');
+}
 
   Future<String?> stopAndTranscribe() async {
-    if (!_isRecording) return null;
-
-    final path = await _recorder.stop();
-    _isRecording = false;
-
-    if (path == null) return null;
-
-    return await _transcribeWithHuggingFace(path);
+  if (!_isRecording) {
+    debugPrint('⚠️ Pas d\'enregistrement en cours');
+    return null;
   }
 
-  Future<String?> _transcribeWithHuggingFace(
-      String filePath) async {
-    try {
-      final file = File(filePath);
-      final bytes = await file.readAsBytes();
-      final base64Audio = base64Encode(bytes);
+  debugPrint('⏹️ Arrêt enregistrement...');
+  final path = await _recorder.stop();
+  _isRecording = false;
 
-      final response = await http.post(
-        Uri.parse(Secrets.huggingFaceUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'data': [
-            {
-              'data': 'data:audio/wav;base64,$base64Audio',
-              'name': 'recording.wav',
-            }
-          ]
-        }),
-      );
+  if (path == null) {
+    debugPrint('❌ Chemin enregistrement null');
+    return null;
+  }
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final transcription =
-            data['data'][0] as String? ?? '';
-        return transcription.toLowerCase().trim();
-      }
-      return null;
-    } catch (e) {
+  debugPrint('✅ Enregistrement sauvegardé : $path');
+
+  // Vérifie la taille du fichier
+  final file = File(path);
+  if (await file.exists()) {
+    final size = await file.length();
+    debugPrint('📦 Taille : $size bytes');
+  }
+
+  return await _transcribeWithHuggingFace(path);
+}
+
+Future<String?> _transcribeWithHuggingFace(String filePath) async {
+  try {
+    debugPrint('📤 Envoi à Hugging Face...');
+
+    final file = File(filePath);
+    if (!await file.exists()) return null;
+    final fileSize = await file.length();
+    if (fileSize < 100) return null;
+
+    debugPrint('📦 Taille : $fileSize bytes');
+
+    // ── Étape 1 : Upload le fichier audio ─────────────────
+    final uploadRequest = http.MultipartRequest(
+      'POST',
+      Uri.parse(
+        'https://jean2255-whisper-baoule-627cba0.hf.space/gradio_api/upload',
+      ),
+    );
+
+    uploadRequest.files.add(
+      await http.MultipartFile.fromPath(
+        'files',
+        filePath,
+        contentType: MediaType('audio', 'wav'),
+      ),
+    );
+
+    final uploadResponse =
+        await uploadRequest.send().timeout(const Duration(seconds: 30));
+    final uploadBody =
+        await uploadResponse.stream.bytesToString();
+
+    debugPrint('📥 Upload status : ${uploadResponse.statusCode}');
+    debugPrint('📥 Upload body : $uploadBody');
+
+    if (uploadResponse.statusCode != 200) {
+      debugPrint('❌ Upload échoué');
       return null;
     }
+
+    // Récupère le chemin du fichier uploadé
+    final uploadData = jsonDecode(uploadBody);
+    final uploadedPath = uploadData[0] as String?;
+
+    if (uploadedPath == null) {
+      debugPrint('❌ Chemin upload null');
+      return null;
+    }
+
+    debugPrint('✅ Fichier uploadé : $uploadedPath');
+
+    // ── Étape 2 : Appelle la prédiction ───────────────────
+    final predictResponse = await http.post(
+      Uri.parse(
+        'https://jean2255-whisper-baoule-627cba0.hf.space/gradio_api/call/predict',
+      ),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'data': [
+          {
+      'path': uploadedPath,
+      'orig_name': 'baoule.wav',
+      'size': fileSize,
+      'mime_type': 'audio/wav',
+      'is_stream': false,
+      'meta': {'_type': 'gradio.FileData'}
+      }
+        ]
+      }),
+    ).timeout(const Duration(seconds: 30));
+
+    debugPrint('📥 Predict status : ${predictResponse.statusCode}');
+    debugPrint('📥 Predict body : ${predictResponse.body}');
+
+    if (predictResponse.statusCode != 200) return null;
+
+    final predictData = jsonDecode(predictResponse.body);
+    final eventId = predictData['event_id'] as String?;
+
+    if (eventId == null) return null;
+
+    debugPrint('🎫 Event ID : $eventId');
+
+    // ── Étape 3 : Récupère le résultat ────────────────────
+    return await _getResult(eventId);
+  } catch (e) {
+    debugPrint('❌ Erreur : $e');
+    return null;
   }
+}
+
+Future<String?> _getResult(String eventId) async {
+  try {
+    debugPrint('⏳ Récupération résultat...');
+
+    final response = await http.get(
+      Uri.parse(
+        'https://jean2255-whisper-baoule-627cba0.hf.space/gradio_api/call/predict/$eventId',
+      ),
+      headers: {'Accept': 'text/event-stream'},
+    ).timeout(const Duration(seconds: 60));
+
+    debugPrint('📥 Résultat status : ${response.statusCode}');
+    debugPrint('📥 Résultat body : ${response.body}');
+
+    if (response.statusCode == 200) {
+      for (final line in response.body.split('\n')) {
+        if (line.startsWith('data: ')) {
+          final jsonStr = line.substring(6).trim();
+          if (jsonStr.isEmpty || jsonStr == 'null') continue;
+          try {
+            final parsed = jsonDecode(jsonStr);
+            if (parsed is List && parsed.isNotEmpty) {
+              final transcription = parsed[0] as String? ?? '';
+              debugPrint('🎯 Transcription : "$transcription"');
+              return transcription.toLowerCase().trim();
+            }
+          } catch (_) {}
+        }
+      }
+    }
+    return null;
+  } catch (e) {
+    debugPrint('❌ Erreur résultat : $e');
+    return null;
+  }
+}
 
   Future<void> cancelRecording() async {
     await _recorder.cancel();
     _isRecording = false;
   }
+
+  /// Réveille le Space HF avant l'enregistrement
+Future<void> warmUp() async {
+  try {
+    debugPrint('🔥 Réveil du Space HF...');
+    await http.get(
+      Uri.parse(Secrets.huggingFaceUrl.replaceAll('/api/predict', '')),
+    ).timeout(const Duration(seconds: 10));
+    debugPrint('✅ Space réveillé');
+  } catch (_) {
+    debugPrint('⚠️ Space pas encore prêt');
+  }
+}
 
   void dispose() {
     _recorder.dispose();

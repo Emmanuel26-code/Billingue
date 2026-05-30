@@ -17,21 +17,21 @@ class LessonsData {
         CourseCard(
           baoule: 'Mo Agni oh',
           francais: 'Bonjour (dit par une femme)',
-          exemple: 'Mo Agni oh → Mo Aé oh',
+          exemple: 'Mo Agni oh → Mo Aré oh',
           exempeFr: 'Bonjour → Réponse : Bonjour à toi aussi',
         ),
         CourseCard(
-          baoule: 'Mo Aé oh',
+          baoule: 'Mo Aré oh',
           francais: 'Réponse au bonjour (femme)',
         ),
         CourseCard(
           baoule: 'N\'dja Agni oh',
           francais: 'Bonjour (dit par un homme)',
-          exemple: 'N\'dja Agni oh → N\'dja arè oh',
+          exemple: 'N\'dja Agni oh → N\'dja Aré oh',
           exempeFr: 'Bonjour → Réponse : Bonjour à toi aussi',
         ),
         CourseCard(
-          baoule: 'N\'dja arè oh',
+          baoule: 'N\'dja Aré oh',
           francais: 'Réponse au bonjour (homme)',
         ),
         CourseCard(
@@ -80,9 +80,9 @@ class LessonsData {
           type: QuestionType.multipleChoice,
           instruction: 'Quelle est la réponse correcte à "Mo Agni oh" ?',
           questionText: 'Mo Agni oh → ?',
-          options: ['Mo Aé oh', 'N\'dja arè oh', 'Mo Anou oh', 'N\'dja Aossi oh'],
-          correctAnswer: 'Mo Aé oh',
-          explanation: 'On répond "Mo Aé oh" à une femme qui dit bonjour.',
+          options: ['Mo Aré oh', 'N\'dja Aré oh', 'Mo Anou oh', 'N\'dja Aossi oh'],
+          correctAnswer: 'Mo Aré oh',
+          explanation: 'On répond "Mo Aré oh" à une femme qui dit bonjour.',
         ),
         QuestionModel(
           id: 'g5',

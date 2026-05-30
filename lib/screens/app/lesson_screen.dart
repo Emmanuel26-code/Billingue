@@ -5,7 +5,7 @@ import '../../controllers/lesson_controller.dart';
 import '../../widgets/answer_tile.dart';
 import '../../widgets/heart_widget.dart';
 import '../../widgets/pronunciation_widget.dart';
-import '../../services/tts_service.dart';
+import '../../services/audio_service.dart';
 import 'result_screen.dart';
 
 class LessonScreen extends StatefulWidget {
@@ -13,8 +13,12 @@ class LessonScreen extends StatefulWidget {
   final UserProgress progress;
   final String uid;
 
-  const LessonScreen(
-      {super.key, required this.lesson, required this.progress, required this.uid});
+  const LessonScreen({
+    super.key,
+    required this.lesson,
+    required this.progress,
+    required this.uid,
+  });
 
   @override
   State<LessonScreen> createState() => _LessonScreenState();
@@ -27,7 +31,7 @@ class _LessonScreenState extends State<LessonScreen>
   late AnimationController _fbAnim;
   late Animation<double> _qSlide;
   late Animation<double> _fbSlide;
-  final TtsService _tts = TtsService();
+  final AudioService _audio = AudioService();
   bool _showFb = false;
 
   @override
@@ -36,15 +40,18 @@ class _LessonScreenState extends State<LessonScreen>
     _ctrl = LessonController(
         lesson: widget.lesson, progress: widget.progress);
     _qAnim = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 380));
+        vsync: this,
+        duration: const Duration(milliseconds: 380));
     _fbAnim = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 320));
+        vsync: this,
+        duration: const Duration(milliseconds: 320));
     _qSlide = Tween<double>(begin: 40, end: 0).animate(
         CurvedAnimation(parent: _qAnim, curve: Curves.easeOut));
     _fbSlide = Tween<double>(begin: 80, end: 0).animate(
         CurvedAnimation(parent: _fbAnim, curve: Curves.easeOut));
-    _ctrl.addListener(() => setState(() {}));
-    _tts.init();
+    _ctrl.addListener(() {
+      if (mounted) setState(() {});
+    });
     _qAnim.forward();
   }
 
@@ -53,76 +60,100 @@ class _LessonScreenState extends State<LessonScreen>
     _ctrl.dispose();
     _qAnim.dispose();
     _fbAnim.dispose();
-    _tts.dispose();
     super.dispose();
   }
 
+  // ── Réponse QCM ────────────────────────────────────────────────────────────
   void _select(String answer) {
+    if (_ctrl.answered) return;
     _ctrl.selectAnswer(answer);
     setState(() => _showFb = true);
     _fbAnim.forward(from: 0);
   }
 
+  // ── Passer à la question suivante ──────────────────────────────────────────
   Future<void> _next() async {
-    await _tts.stop();
     final hasNext = _ctrl.nextQuestion();
     if (!hasNext) {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (_, anim, __) => ResultScreen(
-            lesson: widget.lesson,
-            correctCount: _ctrl.correctCount,
-            totalQuestions: _ctrl.totalQuestions,
-            earnedXP: _ctrl.earnedXP,
-            accuracy: _ctrl.accuracy,
-            progress: widget.progress, uid: widget.uid,
-            errorCount: _ctrl.errorCount,
-          ),
-          transitionsBuilder: (_, anim, __, child) =>
-              FadeTransition(opacity: anim, child: child),
-          transitionDuration: const Duration(milliseconds: 400),
-        ),
-      );
+      _goToResult();
       return;
     }
     setState(() => _showFb = false);
-    _fbAnim.reverse();
-    await Future.delayed(const Duration(milliseconds: 80));
-    _qAnim.forward(from: 0);
+    _fbAnim.reset();
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (mounted) _qAnim.forward(from: 0);
   }
 
-  // Appelé quand la prononciation est réussie
+  // ── Prononciation réussie ──────────────────────────────────────────────────
   void _onPronunciationSuccess() {
-    _ctrl.selectAnswer(_ctrl.currentQuestion.correctAnswer);
-    _next();
+    _ctrl.markPronunciationCorrect();
+    _goToNextOrResult();
   }
 
-  // Appelé quand l'utilisateur passe la question
+  // ── Prononciation passée ───────────────────────────────────────────────────
   void _onPronunciationSkip() {
-    if (widget.progress.hearts > 0) widget.progress.hearts--;
-    _next();
+    _ctrl.markPronunciationFailed();
+    _goToNextOrResult();
+  }
+
+  void _goToNextOrResult() {
+    final hasNext = _ctrl.nextQuestion();
+    if (!hasNext) {
+      _goToResult();
+      return;
+    }
+    setState(() => _showFb = false);
+    _fbAnim.reset();
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) _qAnim.forward(from: 0);
+    });
+  }
+
+  // ── Navigation vers résultats ──────────────────────────────────────────────
+  void _goToResult() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, anim, __) => ResultScreen(
+          lesson: widget.lesson,
+          correctCount: _ctrl.correctCount,
+          totalQuestions: _ctrl.totalQuestions,
+          earnedXP: _ctrl.earnedXP,
+          accuracy: _ctrl.accuracy,
+          progress: widget.progress,
+          uid: widget.uid,
+          errorCount: _ctrl.errorCount,
+        ),
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
+        transitionDuration: const Duration(milliseconds: 400),
+      ),
+    );
   }
 
   AnswerState _state(String opt) {
     if (!_ctrl.answered) return AnswerState.idle;
     if (opt == _ctrl.currentQuestion.correctAnswer)
       return AnswerState.correct;
-    if (opt == _ctrl.selectedAnswer) return AnswerState.incorrect;
+    if (opt == _ctrl.selectedAnswer)
+      return AnswerState.incorrect;
     return AnswerState.idle;
   }
 
   @override
   Widget build(BuildContext context) {
     final q = _ctrl.currentQuestion;
-    final prog = (_ctrl.currentIndex + 1) / _ctrl.totalQuestions;
-    final isPronunciation = q.type == QuestionType.pronunciation;
+    final prog =
+        (_ctrl.currentIndex + 1) / _ctrl.totalQuestions;
+    final isPronunciation =
+        q.type == QuestionType.pronunciation;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Column(
           children: [
+
             // ── Top bar ───────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -145,8 +176,10 @@ class _LessonScreenState extends State<LessonScreen>
                     borderRadius: BorderRadius.circular(8),
                     child: TweenAnimationBuilder<double>(
                       tween: Tween(begin: 0, end: prog),
-                      duration: const Duration(milliseconds: 500),
-                      builder: (_, v, __) => LinearProgressIndicator(
+                      duration:
+                          const Duration(milliseconds: 500),
+                      builder: (_, v, __) =>
+                          LinearProgressIndicator(
                         value: v,
                         backgroundColor: Colors.grey.shade200,
                         valueColor:
@@ -162,7 +195,7 @@ class _LessonScreenState extends State<LessonScreen>
               ]),
             ),
 
-            // ── Question ──────────────────────────────────────
+            // ── Contenu ───────────────────────────────────────
             Expanded(
               child: AnimatedBuilder(
                 animation: _qSlide,
@@ -175,7 +208,7 @@ class _LessonScreenState extends State<LessonScreen>
                   padding:
                       const EdgeInsets.fromLTRB(20, 24, 20, 0),
                   child: isPronunciation
-                      // ── Mode prononciation ────────────────
+                      // ── Mode Prononciation ────────────────
                       ? PronunciationWidget(
                           wordToSay: q.questionText,
                           translation: q.explanation,
@@ -187,9 +220,12 @@ class _LessonScreenState extends State<LessonScreen>
                           crossAxisAlignment:
                               CrossAxisAlignment.start,
                           children: [
+                            // Instruction
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 7),
+                              padding:
+                                  const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 7),
                               decoration: BoxDecoration(
                                 color: AppTheme.primary
                                     .withOpacity(0.1),
@@ -199,10 +235,13 @@ class _LessonScreenState extends State<LessonScreen>
                               child: Text(q.instruction,
                                   style: const TextStyle(
                                       fontSize: 13,
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight:
+                                          FontWeight.w700,
                                       color: AppTheme.primary)),
                             ),
                             const SizedBox(height: 22),
+
+                            // Carte question + bouton audio
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(24),
@@ -213,64 +252,90 @@ class _LessonScreenState extends State<LessonScreen>
                                 border: Border.all(
                                     color: AppTheme.border,
                                     width: 2),
-                              ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    q.questionText,
-                                    style: const TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w900,
-                                        color: AppTheme.textDark),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 14),
-                                  GestureDetector(
-                                    onTap: () => _tts
-                                        .speakBaoule(q.questionText),
-                                    child: Container(
-                                      padding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.primary
-                                            .withOpacity(0.1),
-                                        borderRadius:
-                                            BorderRadius.circular(20),
-                                        border: Border.all(
-                                            color: AppTheme.primary
-                                                .withOpacity(0.3)),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize:
-                                            MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                              Icons.volume_up_rounded,
-                                              color: AppTheme.primary,
-                                              size: 18),
-                                          const SizedBox(width: 6),
-                                          Text('Écouter',
-                                              style: TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight:
-                                                      FontWeight.w600,
-                                                  color: AppTheme
-                                                      .primary)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black
+                                        .withOpacity(0.04),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  )
                                 ],
                               ),
+                              child: Column(children: [
+                                Text(
+                                  q.questionText,
+                                  style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight:
+                                          FontWeight.w900,
+                                      color: AppTheme.textDark),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 14),
+                                // Bouton écouter audio réel
+                                GestureDetector(
+                                  onTap: () async {
+                                    final played =
+                                        await _audio.playWord(
+                                            q.questionText);
+                                    if (!played) {
+                                      // Repli TTS si pas d'audio
+                                      debugPrint(
+                                          'Pas d\'audio pour : ${q.questionText}');
+                                    }
+                                  },
+                                  child: Container(
+                                    padding:
+                                        const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primary
+                                          .withOpacity(0.1),
+                                      borderRadius:
+                                          BorderRadius.circular(
+                                              20),
+                                      border: Border.all(
+                                          color: AppTheme.primary
+                                              .withOpacity(0.3)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize:
+                                          MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                            Icons.volume_up_rounded,
+                                            color: AppTheme.primary,
+                                            size: 18),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          AudioService.hasAudio(
+                                                  q.questionText)
+                                              ? '🎙️ Écouter'
+                                              : '🔊 Écouter',
+                                          style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight:
+                                                  FontWeight.w600,
+                                              color:
+                                                  AppTheme.primary),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ]),
                             ),
-                            const SizedBox(height: 24),
-                            ...q.options.map((opt) => AnswerTile(
-                                  text: opt,
-                                  state: _state(opt),
-                                  onTap: () => _select(opt),
-                                )),
+                            const SizedBox(height: 22),
+
+                            // Options
+                            ...q.options.map(
+                              (opt) => AnswerTile(
+                                text: opt,
+                                state: _state(opt),
+                                onTap: () => _select(opt),
+                              ),
+                            ),
                             const SizedBox(height: 100),
                           ],
                         ),
@@ -278,7 +343,7 @@ class _LessonScreenState extends State<LessonScreen>
               ),
             ),
 
-            // ── Feedback (QCM seulement) ───────────────────────
+            // ── Feedback QCM ──────────────────────────────────
             if (!isPronunciation)
               AnimatedBuilder(
                 animation: _fbSlide,
@@ -286,18 +351,19 @@ class _LessonScreenState extends State<LessonScreen>
                   offset:
                       Offset(0, _showFb ? _fbSlide.value : 80),
                   child: Opacity(
-                      opacity: _showFb ? _fbAnim.value : 0,
-                      child: child),
+                    opacity: _showFb ? _fbAnim.value : 0,
+                    child: child,
+                  ),
                 ),
                 child: _ctrl.answered
-                    ? _Feedback(
+                    ? _FeedbackPanel(
                         correct: _ctrl.isCorrect,
                         explanation: q.explanation,
                         correctAnswer: q.correctAnswer,
                         isLast: _ctrl.isLastQuestion,
                         onContinue: _next,
                         onListen: () =>
-                            _tts.speakBaoule(q.correctAnswer),
+                            _audio.playWord(q.correctAnswer),
                       )
                     : const SizedBox.shrink(),
               ),
@@ -338,7 +404,7 @@ class _LessonScreenState extends State<LessonScreen>
 
 // ── Feedback Widget ───────────────────────────────────────────────────────────
 
-class _Feedback extends StatelessWidget {
+class _FeedbackPanel extends StatelessWidget {
   final bool correct;
   final String explanation;
   final String correctAnswer;
@@ -346,7 +412,7 @@ class _Feedback extends StatelessWidget {
   final VoidCallback onContinue;
   final VoidCallback onListen;
 
-  const _Feedback({
+  const _FeedbackPanel({
     required this.correct,
     required this.explanation,
     required this.correctAnswer,
@@ -366,8 +432,9 @@ class _Feedback extends StatelessWidget {
             : AppTheme.danger.withOpacity(0.07),
         border: Border(
           top: BorderSide(
-              color:
-                  correct ? AppTheme.secondary : AppTheme.danger,
+              color: correct
+                  ? AppTheme.secondary
+                  : AppTheme.danger,
               width: 2),
         ),
       ),
@@ -378,16 +445,20 @@ class _Feedback extends StatelessWidget {
             Text(correct ? '✅' : '❌',
                 style: const TextStyle(fontSize: 22)),
             const SizedBox(width: 8),
-            Text(
-              correct ? 'Excellent !' : 'Pas tout à fait...',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: correct
-                      ? AppTheme.secondaryDark
-                      : AppTheme.danger),
+            Expanded(
+              child: Text(
+                correct
+                    ? 'Excellent !'
+                    : 'Pas tout à fait...',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: correct
+                        ? AppTheme.secondaryDark
+                        : AppTheme.danger),
+              ),
             ),
-            const Spacer(),
+            // Bouton écouter la bonne réponse
             GestureDetector(
               onTap: onListen,
               child: Container(
@@ -403,7 +474,7 @@ class _Feedback extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.volume_up_rounded,
-                        size: 16,
+                        size: 15,
                         color: correct
                             ? AppTheme.secondaryDark
                             : AppTheme.danger),
@@ -433,8 +504,9 @@ class _Feedback extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onContinue,
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    correct ? AppTheme.secondary : AppTheme.danger,
+                backgroundColor: correct
+                    ? AppTheme.secondary
+                    : AppTheme.danger,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28)),
@@ -444,7 +516,8 @@ class _Feedback extends StatelessWidget {
                     ? 'Voir les résultats 🏆'
                     : 'Continuer →',
                 style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w800),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800),
               ),
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:BillingueApp/services/tts_service.dart';
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../services/asr_service.dart';
@@ -34,7 +35,7 @@ class PronunciationWidget extends StatefulWidget {
 class _PronunciationWidgetState extends State<PronunciationWidget>
     with TickerProviderStateMixin {
   final AsrService _asr = AsrService();
-  final AudioService _audio = AudioService();
+  final TtsService _tts = TtsService();
 
   PronunciationState _state = PronunciationState.idle;
   String _spokenText = '';
@@ -64,14 +65,13 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
       CurvedAnimation(
           parent: _shakeCtrl, curve: Curves.elasticIn),
     );
+    AsrService().warmUp();
   }
 
   @override
   void dispose() {
     _pulseCtrl.dispose();
     _shakeCtrl.dispose();
-    _asr.dispose();
-    _audio.dispose();
     super.dispose();
   }
 
@@ -128,7 +128,11 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
   }
 
   Future<void> _listenExample() async {
-    await _audio.playWord(widget.wordToSay);
+    if (AudioService.hasAudio(widget.wordToSay)) {
+      await AudioService().playWord(widget.wordToSay);
+    } else {
+      await _tts.speakBaoule(widget.wordToSay);
+    }
   }
 
   void _retry() {

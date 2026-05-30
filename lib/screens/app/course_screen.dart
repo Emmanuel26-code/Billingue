@@ -5,6 +5,7 @@ import '../../models/lesson_model.dart';
 import '../../services/tts_service.dart';
 import '../../widgets/loading_overlay.dart';
 import 'lesson_screen.dart';
+import '../../services/audio_service.dart';
 
 class CourseScreen extends StatefulWidget {
   final LessonModel lesson;
@@ -26,6 +27,7 @@ class _CourseScreenState extends State<CourseScreen>
     with TickerProviderStateMixin {
   final PageController _pageCtrl = PageController();
   final TtsService _tts = TtsService();
+  final AudioService _audio = AudioService();
   int _currentIndex = 0;
   bool _isSpeaking = false;
 
@@ -442,35 +444,34 @@ class _CourseScreenState extends State<CourseScreen>
                                 ),
                                 const SizedBox(height: 18),
                                 GestureDetector(
-                                  onTap: () =>
-                                      _speak(card.baoule),
+                                  onTap: () async {
+                                    // Joue le vrai audio enregistré
+                                    final played = await _audio.playWord(card.baoule);
+                                    // Si pas d'audio → TTS de secours
+                                    if (!played) await _tts.speakBaoule(card.baoule);
+                                    setState(() => _isSpeaking = !_isSpeaking);
+                                    await Future.delayed(const Duration(seconds: 2));
+                                    if (mounted) setState(() => _isSpeaking = false);
+                                  },
                                   child: AnimatedContainer(
-                                    duration: const Duration(
-                                        milliseconds: 200),
-                                    padding:
-                                        const EdgeInsets.symmetric(
-                                            horizontal: 18,
-                                            vertical: 10),
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 18, vertical: 10),
                                     decoration: BoxDecoration(
                                       color: _isSpeaking
                                           ? AppTheme.primary
-                                          : AppTheme.primary
-                                              .withOpacity(0.1),
-                                      borderRadius:
-                                          BorderRadius.circular(24),
+                                          : AppTheme.primary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(24),
                                       border: Border.all(
-                                          color: AppTheme.primary
-                                              .withOpacity(0.3)),
+                                          color: AppTheme.primary.withOpacity(0.3)),
                                     ),
                                     child: Row(
-                                      mainAxisSize:
-                                          MainAxisSize.min,
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
                                           _isSpeaking
                                               ? Icons.stop_rounded
-                                              : Icons
-                                                  .volume_up_rounded,
+                                              : Icons.volume_up_rounded,
                                           color: _isSpeaking
                                               ? Colors.white
                                               : AppTheme.primary,
@@ -480,11 +481,12 @@ class _CourseScreenState extends State<CourseScreen>
                                         Text(
                                           _isSpeaking
                                               ? 'Stop'
-                                              : 'Écouter',
+                                              : AudioService.hasAudio(card.baoule)
+                                                  ? '🎙️ Écouter'
+                                                  : '🔊 Écouter',
                                           style: TextStyle(
                                             fontSize: 13,
-                                            fontWeight:
-                                                FontWeight.w700,
+                                            fontWeight: FontWeight.w700,
                                             color: _isSpeaking
                                                 ? Colors.white
                                                 : AppTheme.primary,
