@@ -36,6 +36,11 @@ class UserService {
     required List<String> completedLessons,
     required int totalWordsLearned,
     required int totalErrors,
+    int coins = 0,
+    int streakFreezes = 0,
+    int xpToday = 0,
+    DateTime? lastHeartLostAt,
+    DateTime? penaltyEndAt,
   }) async {
     await _db.collection(_collection).doc(uid).update({
       'xp': xp,
@@ -44,6 +49,15 @@ class UserService {
       'completedLessons': completedLessons,
       'totalWordsLearned': totalWordsLearned,
       'totalErrors': totalErrors,
+      'coins': coins,
+      'streakFreezes': streakFreezes,
+      'xpToday': xpToday,
+      'lastHeartLostAt': lastHeartLostAt != null
+          ? Timestamp.fromDate(lastHeartLostAt!)
+          : null,
+      'penaltyEndAt': penaltyEndAt != null
+          ? Timestamp.fromDate(penaltyEndAt!)
+          : null,
     });
   }
 

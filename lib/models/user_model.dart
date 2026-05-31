@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'lesson_model.dart';
 
 class UserModel {
@@ -15,6 +16,11 @@ class UserModel {
   final int totalWordsLearned;
   final int totalErrors;
   final DateTime createdAt;
+  final int coins;
+  final int streakFreezes;
+  final int xpToday;
+  final DateTime? lastHeartLostAt;
+  final DateTime? penaltyEndAt;
 
   const UserModel({
     required this.uid,
@@ -30,6 +36,11 @@ class UserModel {
     this.completedLessons = const [],
     this.totalWordsLearned = 0,
     this.totalErrors = 0,
+    this.coins = 0,
+    this.streakFreezes = 0,
+    this.xpToday = 0,
+    this.lastHeartLostAt,
+    this.penaltyEndAt,
     required this.createdAt,
   });
 
@@ -50,6 +61,15 @@ class UserModel {
       totalWordsLearned: map['totalWordsLearned'] ?? 0,
       totalErrors: map['totalErrors'] ?? 0,
       createdAt: map['createdAt']?.toDate() ?? DateTime.now(),
+      coins: map['coins'] ?? 0,
+      streakFreezes: map['streakFreezes'] ?? 0,
+      xpToday: map['xpToday'] ?? 0,
+      lastHeartLostAt: map['lastHeartLostAt'] != null
+          ? (map['lastHeartLostAt'] as Timestamp).toDate()
+          : null,
+      penaltyEndAt: map['penaltyEndAt'] != null
+          ? (map['penaltyEndAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -68,6 +88,15 @@ class UserModel {
       'totalWordsLearned': totalWordsLearned,
       'totalErrors': totalErrors,
       'createdAt': createdAt,
+      'coins': coins,
+      'streakFreezes': streakFreezes,
+      'xpToday': xpToday,
+      'lastHeartLostAt': lastHeartLostAt != null
+          ? Timestamp.fromDate(lastHeartLostAt!)
+          : null,
+      'penaltyEndAt': penaltyEndAt != null
+          ? Timestamp.fromDate(penaltyEndAt!)
+          : null,
     };
   }
 
@@ -84,6 +113,11 @@ class UserModel {
     List<String>? completedLessons,
     int? totalWordsLearned,
     int? totalErrors,
+    int? coins,
+    int? streakFreezes,
+    int? xpToday,
+    DateTime? lastHeartLostAt,
+    DateTime? penaltyEndAt,
   }) {
     return UserModel(
       uid: uid,
@@ -100,6 +134,11 @@ class UserModel {
       totalWordsLearned:
           totalWordsLearned ?? this.totalWordsLearned,
       totalErrors: totalErrors ?? this.totalErrors,
+      coins: coins ?? this.coins,
+      streakFreezes: streakFreezes ?? this.streakFreezes,
+      xpToday: xpToday ?? this.xpToday,
+      lastHeartLostAt: lastHeartLostAt ?? this.lastHeartLostAt,
+      penaltyEndAt: penaltyEndAt ?? this.penaltyEndAt,
       createdAt: createdAt,
     );
   }
@@ -115,6 +154,11 @@ class UserModel {
       completedLessons: completedLessons.toSet(),
       totalWordsLearned: totalWordsLearned,
       totalErrors: totalErrors,
+      coins: coins,
+      streakFreezes: streakFreezes,
+      xpToday: xpToday,
+      lastHeartLostAt: lastHeartLostAt,
+      penaltyEndAt: penaltyEndAt,
     );
   }
 }

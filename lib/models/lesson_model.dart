@@ -1,3 +1,6 @@
+import 'package:BillingueApp/models/gamification_model.dart';
+import 'package:BillingueApp/services/gamification_service.dart';
+import 'package:BillingueApp/services/hearts_service.dart';
 import 'package:flutter/foundation.dart';
 
 enum QuestionType {
@@ -110,17 +113,35 @@ class UserProgress extends ChangeNotifier {
   Set<String> _completedLessons;
   int _totalWordsLearned;
   int _totalErrors;
+  int _coins;                          // ← AJOUTER
+  int _streakFreezes;                  // ← AJOUTER
+  int _xpToday;                        // ← AJOUTER
+  List<DailyChallenge> _dailyChallenges; // ← AJOUTER
+  List<WeeklyQuest> _weeklyQuests;     // ← AJOUTER
+  DateTime? _lastActiveDate;  
+  DateTime? _lastHeartLostAt;    // ← AJOUTER
+  DateTime? _penaltyEndAt;       // ← AJOUTER
+
 
   UserProgress({
     int xp = 0,
     int hearts = 5,
+    int coins = 0,                          // ← AJOUTER
     int streak = 0,
     String avatar = 'assets/avatars/avatar.png',
     String nom = 'Joueur',
     String objectif = 'Regulier',
     Set<String>? completedLessons,
     int totalWordsLearned = 0,
-    int totalErrors = 0,
+    int totalErrors = 0,    
+    int streakFreezes = 0,                  // ← AJOUTER
+    int xpToday = 0,                        // ← AJOUTER
+    List<DailyChallenge>? dailyChallenges, // ← AJOUTER
+    List<WeeklyQuest>? weeklyQuests,     // ← AJOUTER
+    DateTime? lastActiveDate,           // ← AJOUTER
+    DateTime? lastHeartLostAt,        // ← AJOUTER
+    DateTime? penaltyEndAt,             // ← AJOUTER
+
   })  : _xp = xp,
         _hearts = hearts,
         _streak = streak,
@@ -129,7 +150,17 @@ class UserProgress extends ChangeNotifier {
         _objectif = objectif,
         _completedLessons = completedLessons ?? {},
         _totalWordsLearned = totalWordsLearned,
-        _totalErrors = totalErrors;
+        _totalErrors = totalErrors,
+        _coins = coins,
+        _streakFreezes = streakFreezes,
+        _xpToday = xpToday,
+        _dailyChallenges = dailyChallenges ??
+            GamificationService.generateDailyChallenges(),
+        _weeklyQuests = weeklyQuests ?? 
+            GamificationService.generateWeeklyQuests(),
+        _lastActiveDate = lastActiveDate,
+        _lastHeartLostAt = lastHeartLostAt,
+        _penaltyEndAt = penaltyEndAt;
 
   // Getters
   int get xp => _xp;
@@ -141,6 +172,38 @@ class UserProgress extends ChangeNotifier {
   Set<String> get completedLessons => _completedLessons;
   int get totalWordsLearned => _totalWordsLearned;
   int get totalErrors => _totalErrors;
+  int get coins => _coins;
+  int get streakFreezes => _streakFreezes;
+  int get xpToday => _xpToday;
+  List<DailyChallenge> get dailyChallenges => _dailyChallenges;
+  List<WeeklyQuest> get weeklyQuests => _weeklyQuests;
+  DateTime? get lastActiveDate => _lastActiveDate;
+  DateTime? get lastHeartLostAt => _lastHeartLostAt;
+  DateTime? get penaltyEndAt => _penaltyEndAt;
+
+    bool get isPenaltyActive =>
+      HeartsService.isPenaltyActive(_penaltyEndAt);
+
+  int get penaltySecondsRemaining =>
+      HeartsService.penaltySecondsRemaining(_penaltyEndAt);
+
+  int get secondsUntilNextHeart =>
+      HeartsService.secondsUntilNextHeart(
+        currentHearts: _hearts,
+        lastHeartLostAt: _lastHeartLostAt,
+      );
+
+  bool get heartsAreFull => _hearts >= 5;
+
+    // Niveau calculé automatiquement
+  UserLevel get level =>
+      GamificationService.getLevelFromXP(_xp);
+  double get levelProgress =>
+      GamificationService.getLevelProgress(_xp);
+  League get league =>
+      GamificationService.getLeagueFromXP(_xp);
+
+
 
   // Setters avec notification
   set xp(int value) {
@@ -183,6 +246,11 @@ class UserProgress extends ChangeNotifier {
     notifyListeners();
   }
 
+  set coins(int value) {
+    _coins = value;
+    notifyListeners();
+  }
+
   bool isLessonCompleted(String id) => _completedLessons.contains(id);
 
   void completeLesson(String id, int wordsLearned) {
@@ -196,15 +264,104 @@ class UserProgress extends ChangeNotifier {
     notifyListeners();
   }
 
-  void loseHeart() {
-    if (_hearts > 0) {
-      _hearts--;
+  void addError() {
+    _totalErrors++;
+    notifyListeners();
+  }
+
+  void syncHearts() {
+    final newHearts = HeartsService.calculateCurrentHearts(
+      savedHearts: _hearts,
+      lastHeartLostAt: _lastHeartLostAt,
+    );
+    if (newHearts != _hearts) {
+      _hearts = newHearts;
       notifyListeners();
     }
   }
 
-  void addError() {
-    _totalErrors++;
+  /// Perd un cœur avec gestion régénération + pénalité
+  void loseHeart() {
+    syncHearts(); // Regénère d'abord
+
+    if (_hearts > 0) {
+      _hearts--;
+      _lastHeartLostAt = DateTime.now();
+      _totalErrors++;
+
+      // Pénalité si tous les cœurs perdus
+      if (_hearts == 0) {
+        _penaltyEndAt = DateTime.now().add(
+          Duration(minutes: HeartsService.penaltyMinutes),
+        );
+      }
+      notifyListeners();
+    }
+  }
+
+  /// Recharge les cœurs (achat ou récompense)
+  void refillHearts() {
+    _hearts = 5;
+    _lastHeartLostAt = null;
+    _penaltyEndAt = null;
+    notifyListeners();
+  }
+
+  bool buyStreakFreeze() {
+    if (_coins >= 50) {
+      _coins -= 50;
+      _streakFreezes++;
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  bool repairStreak() {
+    if (_coins >= 100) {
+      _coins -= 100;
+      _streak = 1;
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  void checkAndUpdateStreak() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    if (_lastActiveDate == null) {
+      _streak = 1;
+      _lastActiveDate = today;
+      _xpToday = 0;
+      notifyListeners();
+      return;
+    }
+
+    final lastDay = DateTime(
+      _lastActiveDate!.year,
+      _lastActiveDate!.month,
+      _lastActiveDate!.day,
+    );
+    final diff = today.difference(lastDay).inDays;
+
+    if (diff == 0) {
+      // Même jour : rien à faire
+    } else if (diff == 1) {
+      _streak++;
+      _lastActiveDate = today;
+    } else {
+      if (_streakFreezes > 0) {
+        _streakFreezes--;
+        _lastActiveDate = today;
+      } else {
+        _streak = 1;
+        _lastActiveDate = today;
+      }
+    }
+
+    _xpToday = 0;
     notifyListeners();
   }
 
@@ -218,6 +375,14 @@ class UserProgress extends ChangeNotifier {
     required Set<String> completedLessons,
     required int totalWordsLearned,
     required int totalErrors,
+    required int coins,
+    required int streakFreezes,
+    required int xpToday,
+    required List<DailyChallenge> dailyChallenges,
+    required List<WeeklyQuest> weeklyQuests,
+    DateTime? lastActiveDate,
+    DateTime? lastHeartLostAt,
+    DateTime? penaltyEndAt,
   }) {
     _xp = xp;
     _hearts = hearts;
@@ -228,6 +393,14 @@ class UserProgress extends ChangeNotifier {
     _completedLessons = completedLessons;
     _totalWordsLearned = totalWordsLearned;
     _totalErrors = totalErrors;
+    _coins = coins;
+    _streakFreezes = streakFreezes;
+    _xpToday = xpToday;
+    _dailyChallenges = dailyChallenges;
+    _weeklyQuests = weeklyQuests;
+    _lastActiveDate = lastActiveDate;
+    _lastHeartLostAt = lastHeartLostAt;
+    _penaltyEndAt = penaltyEndAt;
     notifyListeners();
   }
 }

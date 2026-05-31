@@ -1,4 +1,5 @@
 import 'package:BillingueApp/screens/app/badges_screen.dart';
+import 'package:BillingueApp/screens/app/gamification_screen.dart';
 import 'package:BillingueApp/screens/app/logout_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
@@ -8,6 +9,7 @@ import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/avatar_picker.dart';
+import '../../widgets/hearts_timer_widget.dart';
 import '../auth/welcome_screen.dart';
 import 'stats_screen.dart';
 import '../../widgets/loading_overlay.dart';
@@ -69,8 +71,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _notificationsEnabled = value);
     if (value) {
       await NotificationService().requestPermission();
-      await NotificationService()
-          .scheduleReminders(widget.progress.objectif);
+      await NotificationService().scheduleReminders(widget.progress.objectif);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -79,8 +80,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             backgroundColor: AppTheme.secondary,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -96,8 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       xp: widget.progress.xp,
       hearts: widget.progress.hearts,
       streak: widget.progress.streak,
-      completedLessons:
-          widget.progress.completedLessons.toList(),
+      completedLessons: widget.progress.completedLessons.toList(),
       totalWordsLearned: widget.progress.totalWordsLearned,
       totalErrors: widget.progress.totalErrors,
     );
@@ -107,8 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-            builder: (_) => const WelcomeScreen()),
+        MaterialPageRoute(builder: (_) => const WelcomeScreen()),
         (_) => false,
       );
     }
@@ -116,45 +115,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final done =
-        widget.progress.completedLessons.length;
+    final done = widget.progress.completedLessons.length;
     final total = LessonsData.allLessons.length;
-    final pct =
-        total > 0 ? (done / total * 100).round() : 0;
+    final pct = total > 0 ? (done / total * 100).round() : 0;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: const Color.fromARGB(255, 255, 118, 21),
       body: Column(
         children: [
           // Header orange
           Container(
-            color: AppTheme.primary,
+            color: const Color.fromARGB(255, 255, 118, 21),
             child: SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    20, 16, 20, 28),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
                 child: Column(children: [
                   GestureDetector(
                     onTap: _openAvatarPicker,
                     child: Stack(children: [
                       AnimatedSwitcher(
-                        duration:
-                            const Duration(milliseconds: 300),
+                        duration: const Duration(milliseconds: 300),
                         transitionBuilder: (child, anim) =>
-                            ScaleTransition(
-                                scale: anim, child: child),
+                            ScaleTransition(scale: anim, child: child),
                         child: Container(
-                          key: ValueKey(
-                              widget.progress.avatar),
+                          key: ValueKey(widget.progress.avatar),
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: Colors.white
-                                    .withOpacity(0.6),
-                                width: 3),
+                                color: Colors.white.withOpacity(0.6), width: 3),
                           ),
                           child: ClipOval(
                             child: Image.asset(
@@ -175,13 +166,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
-                            border: Border.all(
-                                color: AppTheme.primary,
-                                width: 2),
+                            border:
+                                Border.all(color: AppTheme.primary, width: 2),
                           ),
                           child: Icon(Icons.edit_rounded,
-                              size: 13,
-                              color: AppTheme.primary),
+                              size: 13, color: AppTheme.primary),
                         ),
                       ),
                     ]),
@@ -195,9 +184,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 3),
                   Text('Apprenant Baoulé 🇨🇮',
                       style: TextStyle(
-                          color:
-                              Colors.white.withOpacity(0.8),
-                          fontSize: 13)),
+                          color: Colors.white.withOpacity(0.8), fontSize: 13)),
                 ]),
               ),
             ),
@@ -209,32 +196,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(children: [
                 // Stats
                 Row(children: [
-                  _Box('${widget.progress.xp}', 'XP total',
-                      AppTheme.primary, '⚡'),
+                  _Box('${widget.progress.xp}', 'XP total', AppTheme.primary,
+                      '⚡'),
                   const SizedBox(width: 10),
-                  _Box('${widget.progress.streak}', 'Série',
-                      AppTheme.primary, '🔥'),
+                  _Box('${widget.progress.streak}', 'Série', AppTheme.primary,
+                      '🔥'),
                   const SizedBox(width: 10),
-                  _Box('$pct%', 'Complété',
-                      AppTheme.secondary, '🏆'),
+                  _Box('$pct%', 'Complété', AppTheme.secondary, '🏆'),
                 ]),
                 const SizedBox(height: 10),
                 Row(children: [
-                  _Box(
-                      '${widget.progress.totalWordsLearned}',
-                      'Mots appris',
-                      Colors.blue,
-                      '📖'),
+                  _Box('${widget.progress.totalWordsLearned}', 'Mots appris',
+                      Colors.blue, '📖'),
                   const SizedBox(width: 10),
-                  _Box('${widget.progress.hearts}',
-                      'Vies restantes',
-                      AppTheme.danger,
-                      '❤️'),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppTheme.border),
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 10),
-                  _Box('${widget.progress.totalErrors}',
-                      'Erreurs totales',
-                      Colors.orange,
-                      '❌'),
+                  _Box('${widget.progress.totalErrors}', 'Erreurs totales',
+                      Colors.orange, '❌'),
                 ]),
                 const SizedBox(height: 16),
 
@@ -245,42 +232,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border:
-                        Border.all(color: AppTheme.border),
+                    border: Border.all(color: AppTheme.border),
                   ),
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Progression globale',
                               style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight:
-                                      FontWeight.w700)),
+                                  fontSize: 14, fontWeight: FontWeight.w700)),
                           Text('$done/$total leçons',
                               style: TextStyle(
-                                  fontSize: 12,
-                                  color:
-                                      AppTheme.textGrey)),
+                                  fontSize: 12, color: AppTheme.textGrey)),
                         ],
                       ),
                       const SizedBox(height: 10),
                       ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(6),
                         child: LinearProgressIndicator(
-                          value: total > 0
-                              ? done / total
-                              : 0,
-                          backgroundColor:
-                              Colors.grey.shade100,
-                          valueColor:
-                              const AlwaysStoppedAnimation
-                                  <Color>(AppTheme.primary),
+                          value: total > 0 ? done / total : 0,
+                          backgroundColor: Colors.grey.shade100,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              AppTheme.primary),
                           minHeight: 10,
                         ),
                       ),
@@ -290,36 +265,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 16),
 
                 // Menu
-                _Item('📊', const Color(0xFFFFF0E5),
-                    'Mes statistiques', null, () {
+                _Item('📊', const Color(0xFFFFF0E5), 'Mes statistiques', null,
+                    () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (_) => StatsScreen(
-                            progress: widget.progress)),
+                        builder: (_) => StatsScreen(progress: widget.progress)),
                   );
                 }),
 
-                _Item('🏅', const Color(0xFFFFF8E1),
-                   'Mes badges', null, () {
+                _Item('🎮', const Color(0xFFEEF0FF), 'Gamification', null, () {
                   Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => BadgesScreen(progress: widget.progress),
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => GamificationScreen(
+                        progress: widget.progress,
+                        uid: widget.uid,
                       ),
+                    ),
                   );
-              }),
+                }),
+
+                _Item('🏅', const Color(0xFFFFF8E1), 'Mes badges', null, () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BadgesScreen(progress: widget.progress),
+                    ),
+                  );
+                }),
 
                 // Notifications avec toggle
                 Container(
                   margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
-                    border:
-                        Border.all(color: AppTheme.border),
+                    border: Border.all(color: AppTheme.border),
                   ),
                   child: Row(children: [
                     Container(
@@ -327,24 +311,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       height: 36,
                       decoration: BoxDecoration(
                           color: const Color(0xFFE5F9EE),
-                          borderRadius:
-                              BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(10)),
                       child: const Center(
-                          child: Text('🔔',
-                              style:
-                                  TextStyle(fontSize: 18))),
+                          child: Text('🔔', style: TextStyle(fontSize: 18))),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text('Notifications',
                               style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight:
-                                      FontWeight.w600)),
+                                  fontSize: 15, fontWeight: FontWeight.w600)),
                           Text(
                             _notificationsEnabled
                                 ? 'Rappels activés · ${widget.progress.objectif}'
@@ -366,58 +344,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ]),
                 ),
 
-                _Item('🌍', const Color(0xFFE5F0FF),
-                    'Langue', null, () {}),
+                _Item('🌍', const Color(0xFFE5F0FF), 'Langue', null, () {}),
 
                 // Déconnexion propre
-                _Item(
-                    '🚪',
-                    const Color(0xFFFFF0F0),
-                    'Déconnexion',
+                _Item('🚪', const Color(0xFFFFF0F0), 'Déconnexion',
                     AppTheme.danger, () async {
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (_) => AlertDialog(
                       shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(20)),
+                          borderRadius: BorderRadius.circular(20)),
                       title: const Text('Déconnexion ?',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w800)),
+                          style: TextStyle(fontWeight: FontWeight.w800)),
                       content: const Text(
                           'Ta progression est sauvegardée. Tu pourras te reconnecter à tout moment.'),
                       actions: [
                         TextButton(
-                          onPressed: () =>
-                              Navigator.pop(context, false),
+                          onPressed: () => Navigator.pop(context, false),
                           child: Text('Annuler',
-                              style: TextStyle(
-                                  color: AppTheme.primary)),
+                              style: TextStyle(color: AppTheme.primary)),
                         ),
                         TextButton(
-                          onPressed: () =>
-                              Navigator.pop(context, true),
+                          onPressed: () => Navigator.pop(context, true),
                           child: Text('Déconnecter',
-                              style: TextStyle(
-                                  color: AppTheme.danger)),
+                              style: TextStyle(color: AppTheme.danger)),
                         ),
                       ],
                     ),
                   );
                   if (confirm == true && mounted) {
-                     Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder: (_, anim, __) => LogoutScreen(
-                            progress: widget.progress,
-                            uid: widget.uid,
-                          ),
-                          transitionsBuilder: (_, anim, __, child) =>
-                            FadeTransition(opacity: anim, child: child),
-                          transitionDuration: const Duration(milliseconds: 400),
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (_, anim, __) => LogoutScreen(
+                          progress: widget.progress,
+                          uid: widget.uid,
                         ),
-                     );
-                   }
+                        transitionsBuilder: (_, anim, __, child) =>
+                            FadeTransition(opacity: anim, child: child),
+                        transitionDuration: const Duration(milliseconds: 400),
+                      ),
+                    );
+                  }
                 }),
               ]),
             ),
@@ -447,18 +415,14 @@ class _Box extends StatelessWidget {
           border: Border.all(color: AppTheme.border),
         ),
         child: Column(children: [
-          Text(icon,
-              style: const TextStyle(fontSize: 18)),
+          Text(icon, style: const TextStyle(fontSize: 18)),
           const SizedBox(height: 4),
           Text(val,
               style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: color)),
+                  fontSize: 16, fontWeight: FontWeight.w900, color: color)),
           const SizedBox(height: 2),
           Text(lbl,
-              style: const TextStyle(
-                  fontSize: 9, color: Colors.grey),
+              style: const TextStyle(fontSize: 9, color: Colors.grey),
               textAlign: TextAlign.center),
         ]),
       ),
@@ -473,8 +437,7 @@ class _Item extends StatelessWidget {
   final Color? labelColor;
   final VoidCallback onTap;
 
-  const _Item(
-      this.icon, this.bg, this.label, this.labelColor, this.onTap);
+  const _Item(this.icon, this.bg, this.label, this.labelColor, this.onTap);
 
   @override
   Widget build(BuildContext context) {
@@ -482,8 +445,7 @@ class _Item extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
@@ -494,11 +456,9 @@ class _Item extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-                color: bg,
-                borderRadius: BorderRadius.circular(10)),
-            child: Center(
-                child: Text(icon,
-                    style: const TextStyle(fontSize: 18))),
+                color: bg, borderRadius: BorderRadius.circular(10)),
+            child:
+                Center(child: Text(icon, style: const TextStyle(fontSize: 18))),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -508,8 +468,7 @@ class _Item extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: labelColor ?? AppTheme.textDark)),
           ),
-          Icon(Icons.arrow_forward_ios,
-              size: 14, color: Colors.grey.shade400),
+          Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.shade400),
         ]),
       ),
     );

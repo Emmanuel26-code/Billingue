@@ -4,6 +4,7 @@ import '../../models/lesson_model.dart';
 import '../../controllers/lesson_controller.dart';
 import '../../widgets/answer_tile.dart';
 import '../../widgets/heart_widget.dart';
+import '../../widgets/penalty_screen.dart';
 import '../../widgets/pronunciation_widget.dart';
 import '../../services/audio_service.dart';
 import 'result_screen.dart';
@@ -37,6 +38,21 @@ class _LessonScreenState extends State<LessonScreen>
   @override
   void initState() {
     super.initState();
+    // Synchronise les cœurs régénérés
+    widget.progress.syncHearts();
+
+    // Vérifie la pénalité
+    if (widget.progress.isPenaltyActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showPenaltyOverlay(
+          context,
+          progress: widget.progress,
+          uid: widget.uid,
+          onResume: () => Navigator.pop(context),
+        );
+      });
+    }
+
     _ctrl = LessonController(
         lesson: widget.lesson, progress: widget.progress);
     _qAnim = AnimationController(
@@ -69,6 +85,25 @@ class _LessonScreenState extends State<LessonScreen>
     _ctrl.selectAnswer(answer);
     setState(() => _showFb = true);
     _fbAnim.forward(from: 0);
+
+    // Vérifie la pénalité après perte de cœur
+    if (!_ctrl.isCorrect && widget.progress.hearts == 0) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          showPenaltyOverlay(
+            context,
+            progress: widget.progress,
+            uid: widget.uid,
+            onResume: () {
+              // Reprend si des cœurs sont disponibles
+              if (widget.progress.hearts > 0) {
+                Navigator.pop(context);
+              }
+            },
+          );
+        }
+      });
+    }
   }
 
   // ── Passer à la question suivante ──────────────────────────────────────────

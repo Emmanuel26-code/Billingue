@@ -2,7 +2,9 @@ import 'package:BillingueApp/screens/app/revision_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../data/lessons_data.dart';
+import '../../models/gamification_model.dart';
 import '../../models/lesson_model.dart';
+import '../../services/gamification_service.dart';
 import '../../widgets/lesson_card.dart';
 import 'course_screen.dart';
 
@@ -28,6 +30,8 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+    // Synchronise les cœurs régénérés à chaque ouverture
+    widget.progress.syncHearts();
     _ctrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 700));
     _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
@@ -352,6 +356,38 @@ class _Header extends StatelessWidget {
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                   minHeight: 8,
                 ),
+              ),
+              const SizedBox(height: 10),
+              Row(children: [
+                Text('🎯 Défis du jour',
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700)),
+                const Spacer(),
+                Text(
+                  '${progress.dailyChallenges.where((c) => c.completed).length}/${progress.dailyChallenges.length} complétés',
+                  style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 11),
+                ),
+              ]),
+              const SizedBox(height: 6),
+              Row(
+                children: progress.dailyChallenges.map((c) {
+                  return Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 4),
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: c.completed
+                            ? Colors.white
+                            : Colors.white.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
             ],
           ),

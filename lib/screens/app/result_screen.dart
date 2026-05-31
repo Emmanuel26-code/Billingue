@@ -1,7 +1,9 @@
 import 'dart:math';
+import 'package:BillingueApp/models/gamification_model.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../models/lesson_model.dart';
+import '../../services/gamification_service.dart';
 import '../../services/user_service.dart';
 import '../../services/notification_service.dart';
 import 'main_screen.dart';
@@ -79,7 +81,20 @@ class _ResultScreenState extends State<ResultScreen>
     await Future.delayed(const Duration(milliseconds: 600));
     _xpCtrl.forward();
 
-    // Sauvegarde dans Firestore
+    // Mise à jour défis et quêtes
+    GamificationService.updateChallengesAfterLesson(
+      challenges: widget.progress.dailyChallenges,
+      quests: widget.progress.weeklyQuests,
+      xpEarned: widget.earnedXP,
+      wordsLearned: widget.lesson.courseCards.length,
+      isPerfect: widget.accuracy == 100,
+      streak: widget.progress.streak,
+    );
+
+    // Vérifie la série
+    widget.progress.checkAndUpdateStreak();
+
+    // Sauvegarde Firestore
     if (widget.uid.isNotEmpty) {
       await UserService().completeLesson(
         uid: widget.uid,
@@ -87,6 +102,14 @@ class _ResultScreenState extends State<ResultScreen>
         xpGained: widget.earnedXP,
         wordsLearned: widget.lesson.courseCards.length,
         errors: widget.errorCount,
+      );
+      await GamificationService().saveGamificationData(
+        uid: widget.uid,
+        coins: widget.progress.coins,
+        streakFreezes: widget.progress.streakFreezes,
+        dailyChallenges: widget.progress.dailyChallenges,
+        weeklyQuests: widget.progress.weeklyQuests,
+        league: widget.progress.league.label,
       );
 
       // Notification de félicitation
