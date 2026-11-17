@@ -4,6 +4,7 @@ import '../../core/theme.dart';
 import '../../models/lesson_model.dart';
 import '../../models/gamification_model.dart';
 import '../../services/gamification_service.dart';
+import '../../services/user_service.dart';
 
 class GamificationScreen extends StatefulWidget {
   final UserProgress progress;
@@ -25,6 +26,9 @@ class _GamificationScreenState extends State<GamificationScreen>
   late AnimationController _headerCtrl;
   late Animation<double> _headerAnim;
 
+  // Générés une seule fois (sinon l'état « ouvert » est perdu à chaque build).
+  final List<RewardChest> _chests = GamificationService.generateChests();
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +39,18 @@ class _GamificationScreenState extends State<GamificationScreen>
         parent: _headerCtrl, curve: Curves.easeOut);
     _headerCtrl.forward();
     widget.progress.addListener(_rebuild);
+    _loadClaimedChests();
+  }
+
+  Future<void> _loadClaimedChests() async {
+    if (widget.uid.isEmpty) return;
+    final claimed = await UserService().claimedChests(widget.uid);
+    if (!mounted) return;
+    setState(() {
+      for (final c in _chests) {
+        if (claimed.contains(c.id)) c.claimed = true;
+      }
+    });
   }
 
   @override
@@ -268,7 +284,7 @@ class _GamificationScreenState extends State<GamificationScreen>
                     widget.progress.dailyChallenges[i];
                 return _ChallengeCard(
                     challenge: challenge,
-                    onClaim: challenge.completed
+                    onClaim: challenge.completed && !challenge.claimed
                         ? () => _claimChallenge(challenge)
                         : null);
               },
@@ -313,7 +329,7 @@ class _GamificationScreenState extends State<GamificationScreen>
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.fromLTRB(
                     20, 10, 20, 0),
-                children: GamificationService.generateChests()
+                children: _chests
                     .map((chest) => _ChestCard(
                           chest: chest,
                           onClaim: chest.isAvailable
@@ -414,23 +430,47 @@ class _GamificationScreenState extends State<GamificationScreen>
   }
 
   void _claimChallenge(DailyChallenge challenge) {
+    if (challenge.claimed) return;
     HapticFeedback.mediumImpact();
+    challenge.claimed = true;
     widget.progress.addXP(challenge.xpReward);
-    widget.progress.coins += widget.progress.coins +
-        challenge.coinsReward;
+    widget.progress.coins += challenge.coinsReward;
+    _persistReward(xp: challenge.xpReward, coins: challenge.coinsReward);
     _showSuccess(
         '+${challenge.xpReward} XP et +${challenge.coinsReward} 🪙 !');
   }
 
   void _claimChest(RewardChest chest) {
+    if (chest.claimed) return;
     HapticFeedback.heavyImpact();
     chest.claimed = true;
     widget.progress.addXP(chest.xpReward);
-    widget.progress.coins =
-        widget.progress.coins + chest.coinsReward;
+    widget.progress.coins += chest.coinsReward;
+    _persistReward(
+        xp: chest.xpReward, coins: chest.coinsReward, chestId: chest.id);
     _showSuccess(
         '${chest.title} ouvert ! +${chest.xpReward} XP 🎉');
     setState(() {});
+  }
+
+  /// Enregistre la récompense dans Firestore (XP, pièces, état des défis).
+  Future<void> _persistReward(
+      {required int xp, required int coins, String? chestId}) async {
+    if (widget.uid.isEmpty) return;
+    try {
+      await UserService().claimReward(
+          uid: widget.uid, xp: xp, coins: coins, chestId: chestId);
+      await GamificationService().saveGamificationData(
+        uid: widget.uid,
+        coins: widget.progress.coins,
+        streakFreezes: widget.progress.streakFreezes,
+        dailyChallenges: widget.progress.dailyChallenges,
+        weeklyQuests: widget.progress.weeklyQuests,
+        league: widget.progress.league.label,
+      );
+    } catch (e) {
+      debugPrint('Sauvegarde récompense échouée : $e');
+    }
   }
 
   void _showSuccess(String msg) {

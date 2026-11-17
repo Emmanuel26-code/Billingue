@@ -7,6 +7,7 @@ import '../../widgets/heart_widget.dart';
 import '../../widgets/penalty_screen.dart';
 import '../../widgets/pronunciation_widget.dart';
 import '../../services/audio_service.dart';
+import '../../services/hearts_service.dart';
 import 'result_screen.dart';
 
 class LessonScreen extends StatefulWidget {
@@ -73,6 +74,18 @@ class _LessonScreenState extends State<LessonScreen>
 
   @override
   void dispose() {
+    // Les vies perdues doivent survivre à un rechargement de l'app
+    // (leçon terminée ou quittée en cours).
+    if (widget.uid.isNotEmpty) {
+      HeartsService()
+          .saveHeartsData(
+            uid: widget.uid,
+            hearts: widget.progress.hearts,
+            lastHeartLostAt: widget.progress.lastHeartLostAt,
+            penaltyEndAt: widget.progress.penaltyEndAt,
+          )
+          .catchError((e) => debugPrint('Sauvegarde des vies échouée : $e'));
+    }
     _ctrl.dispose();
     _qAnim.dispose();
     _fbAnim.dispose();

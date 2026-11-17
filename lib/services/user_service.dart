@@ -81,6 +81,27 @@ class UserService {
         .update({'objectif': objectif});
   }
 
+  /// Crédite une récompense (défi, coffre) directement dans Firestore,
+  /// pour que le classement et le profil restent cohérents.
+  Future<void> claimReward({
+    required String uid,
+    required int xp,
+    required int coins,
+    String? chestId,
+  }) async {
+    await _db.collection(_collection).doc(uid).update({
+      'xp': FieldValue.increment(xp),
+      'coins': FieldValue.increment(coins),
+      if (chestId != null) 'claimedChests': FieldValue.arrayUnion([chestId]),
+    });
+  }
+
+  /// Identifiants des coffres déjà ouverts.
+  Future<Set<String>> claimedChests(String uid) async {
+    final doc = await _db.collection(_collection).doc(uid).get();
+    return Set<String>.from(doc.data()?['claimedChests'] ?? const []);
+  }
+
   Future<void> completeLesson({
     required String uid,
     required String lessonId,

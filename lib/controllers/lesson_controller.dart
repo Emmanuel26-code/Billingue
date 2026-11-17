@@ -46,11 +46,9 @@ class LessonController with ChangeNotifier {
     _answered = true;
     if (_isCorrect) {
       _correctCount++;
-      progress.addXP(AppConstants.xpPerCorrect);
     } else {
       _errorCount++;
-      progress.loseHeart();
-      progress.addError();
+      progress.loseHeart(); // compte aussi l'erreur
     }
     notifyListeners();
   }
@@ -67,7 +65,9 @@ class LessonController with ChangeNotifier {
       notifyListeners();
       return true;
     }
-    // Leçon terminée — sauvegarde progression
+    // Leçon terminée — l'XP n'est créditée qu'ici, en même temps que la
+    // sauvegarde Firestore (result_screen). Quitter en cours = 0 XP.
+    progress.addXP(earnedXP);
     progress.completeLesson(
       lesson.id,
       lesson.courseCards.length,
@@ -82,7 +82,6 @@ class LessonController with ChangeNotifier {
       _isCorrect = true;
       _answered = true;
       _correctCount++;
-      progress.addXP(AppConstants.xpPerCorrect);
       notifyListeners();
     }
   }
@@ -93,8 +92,7 @@ class LessonController with ChangeNotifier {
       _answered = true;
       _isCorrect = false;
       _errorCount++;
-      progress.loseHeart();
-      progress.addError();
+      progress.loseHeart(); // compte aussi l'erreur
       notifyListeners();
     }
   }

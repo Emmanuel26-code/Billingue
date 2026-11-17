@@ -121,6 +121,7 @@ class DailyChallenge {
   final int xpReward;
   final int coinsReward;
   bool completed;
+  bool claimed; // récompense déjà réclamée
 
   DailyChallenge({
     required this.id,
@@ -132,6 +133,7 @@ class DailyChallenge {
     required this.xpReward,
     required this.coinsReward,
     this.completed = false,
+    this.claimed = false,
   });
 
   double get progress =>
@@ -148,6 +150,7 @@ class DailyChallenge {
       xpReward: m['xpReward'],
       coinsReward: m['coinsReward'],
       completed: m['completed'] ?? false,
+      claimed: m['claimed'] ?? false,
     );
   }
 
@@ -161,6 +164,7 @@ class DailyChallenge {
     'xpReward': xpReward,
     'coinsReward': coinsReward,
     'completed': completed,
+    'claimed': claimed,
   };
 }
 

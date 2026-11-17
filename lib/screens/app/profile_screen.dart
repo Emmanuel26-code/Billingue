@@ -207,16 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _Box('${widget.progress.totalWordsLearned}', 'Mots appris',
                       Colors.blue, '📖'),
                   const SizedBox(width: 10),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppTheme.border),
-                      ),
-                    ),
-                  ),
+                  _Box('${widget.progress.hearts}', 'Vies', Colors.red, '❤️'),
                   const SizedBox(width: 10),
                   _Box('${widget.progress.totalErrors}', 'Erreurs totales',
                       Colors.orange, '❌'),
