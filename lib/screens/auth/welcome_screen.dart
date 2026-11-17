@@ -60,7 +60,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 40),
                     child: Text(
-                      'Apprend le baoulé avec\nBillingue',
+                      'Apprends le baoulé avec\nBillingue',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: 28,

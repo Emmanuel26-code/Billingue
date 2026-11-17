@@ -8,6 +8,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'core/theme.dart';
 import 'screens/auth/splash_screen.dart';
 import 'firebase_options.dart';
+import 'widgets/responsive_shell.dart';
 
 /// `flutter run --dart-define=USE_EMULATORS=true` pour tester en local
 /// avec `firebase emulators:start` (voir README).
@@ -31,8 +32,13 @@ void main() async {
   // Init notifications
   await NotificationService().init();
 
-  SystemChrome.setPreferredOrientations(
-      [DeviceOrientation.portraitUp]);
+  // Portrait imposé sur téléphone uniquement : sur tablette et PC, l'app
+  // est affichée dans un cadre (ResponsiveShell) et peut tourner.
+  final view = WidgetsBinding.instance.platformDispatcher.views.first;
+  final shortestSide = view.physicalSize.shortestSide / view.devicePixelRatio;
+  if (shortestSide < ResponsiveShell.phoneBreakpoint) {
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  }
   SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
@@ -50,6 +56,8 @@ class BillingueApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: const SplashScreen(),
+      builder: (context, child) =>
+          ResponsiveShell(child: child ?? const SizedBox.shrink()),
     );
   }
 }

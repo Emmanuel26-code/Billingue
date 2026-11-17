@@ -121,9 +121,9 @@ class BadgeService {
         id: 'ci_pride',
         emoji: '🇨🇮',
         title: 'Fierté Ivoirienne',
-        description: 'Apprends ta première salutation',
-        earned:
-            progress.isLessonCompleted('greetings'),
+        // Présentation du projet : « Fierté Ivoirienne — Première connexion ».
+        description: 'Ta première connexion à Billingue',
+        earned: true,
       ),
     ];
   }

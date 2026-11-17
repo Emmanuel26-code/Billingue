@@ -148,7 +148,7 @@ class _SplashScreenState extends State<SplashScreen>
                               letterSpacing: 1)),
                       const SizedBox(height: 6),
                       Text(
-                        'Apprend le baoulé avec Billingue',
+                        'Apprends le baoulé avec Billingue',
                         style: TextStyle(
                             fontSize: 14,
                             color: Colors.white.withValues(alpha: 0.9)),

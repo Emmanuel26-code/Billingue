@@ -1,12 +1,12 @@
 {
-    "name": "billingue2",
-    "short_name": "billingue2",
+    "name": "Billingue — Apprends le baoulé",
+    "short_name": "Billingue",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#FF6B00",
+    "theme_color": "#FF6B00",
+    "description": "Apprends le baoulé, langue de Côte d'Ivoire, avec des leçons, des quiz et Aya.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

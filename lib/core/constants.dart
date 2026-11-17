@@ -1,6 +1,6 @@
 class AppConstants {
   static const String appName = 'Billingue';
-  static const String tagline = 'Apprend le baoulé avec Billingue';
+  static const String tagline = 'Apprends le baoulé avec Billingue';
 
   static const int maxHearts = 5;
   static const int xpPerCorrect = 10;
