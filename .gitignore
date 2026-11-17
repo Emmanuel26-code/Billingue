@@ -46,8 +46,8 @@ app.*.map.json
 # Clés locales (voir secrets.example.json)
 secrets.json
 
-# Documents personnels (présentation, rapports, vidéos)
-*.docx
-*.pdf
-*.pptx
-*.mp4
+# Documents personnels à la racine (présentation, rapports, vidéos)
+/*.docx
+/*.pdf
+/*.pptx
+/*.mp4
