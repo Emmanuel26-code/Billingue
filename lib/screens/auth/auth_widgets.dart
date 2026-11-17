@@ -41,7 +41,7 @@ class AuthTopBar extends StatelessWidget {
   }
 }
 
-class AuthInput extends StatelessWidget {
+class AuthInput extends StatefulWidget {
   final TextEditingController controller;
   final String hint;
   final TextInputType keyboardType;
@@ -58,16 +58,42 @@ class AuthInput extends StatelessWidget {
   });
 
   @override
+  State<AuthInput> createState() => _AuthInputState();
+}
+
+class _AuthInputState extends State<AuthInput> {
+  final FocusNode _focus = FocusNode();
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Sur navigateur mobile, passer d'un champ à l'autre demandait deux
+    // appuis : le premier ne faisait que quitter le champ précédent.
+    // On prend le focus dès que le doigt touche le champ.
+    return Listener(
+      onPointerDown: (_) {
+        if (!_focus.hasFocus) _focus.requestFocus();
+      },
+      child: _buildField(),
+    );
+  }
+
+  Widget _buildField() {
     return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscure,
+      focusNode: _focus,
+      controller: widget.controller,
+      keyboardType: widget.keyboardType,
+      obscureText: widget.obscure,
       style: const TextStyle(fontSize: 15),
       decoration: InputDecoration(
-        hintText: hint,
+        hintText: widget.hint,
         hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-        suffixIcon: suffix,
+        suffixIcon: widget.suffix,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         filled: true,

@@ -120,66 +120,87 @@ class _HomeScreenState extends State<HomeScreen>
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               child: GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RevisionScreen(
-                      progress: widget.progress,
-                      uid: widget.uid,
-                    ),
-                  ),
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.purple.shade400,
-                        Colors.purple.shade700,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.purple.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+                onTap: () {
+                  // Rien à réviser tant qu'aucune leçon n'est terminée.
+                  if (widget.progress.completedLessons.isEmpty) {
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(const SnackBar(
+                        content: Text(
+                            "Termine d'abord une leçon pour débloquer la révision 📚"),
+                      ));
+                    return;
+                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => RevisionScreen(
+                        progress: widget.progress,
+                        uid: widget.uid,
                       ),
-                    ],
-                  ),
-                  child: Row(children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                          child: Text('🔄', style: TextStyle(fontSize: 24))),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Mode Révision',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800)),
-                          Text(
-                            'Révise les leçons déjà apprises',
-                            style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.8),
-                                fontSize: 12),
-                          ),
+                  );
+                },
+                child: Opacity(
+                  opacity: widget.progress.completedLessons.isEmpty ? 0.5 : 1,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.purple.shade400,
+                          Colors.purple.shade700,
                         ],
                       ),
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.purple.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    const Icon(Icons.arrow_forward_ios,
-                        color: Colors.white, size: 16),
-                  ]),
+                    child: Row(children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                            child: Text('🔄', style: TextStyle(fontSize: 24))),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Mode Révision',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800)),
+                            Text(
+                              widget.progress.completedLessons.isEmpty
+                                  ? 'Termine une leçon pour la débloquer'
+                                  : 'Révise les leçons déjà apprises',
+                              style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                          widget.progress.completedLessons.isEmpty
+                              ? Icons.lock_outline
+                              : Icons.arrow_forward_ios,
+                          color: Colors.white,
+                          size: 16),
+                    ]),
+                  ),
                 ),
               ),
             ),
@@ -366,8 +387,7 @@ class _Header extends StatelessWidget {
                 Text(
                   '${progress.dailyChallenges.where((c) => c.completed).length}/${progress.dailyChallenges.length} complétés',
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 11),
+                      color: Colors.white.withValues(alpha: 0.7), fontSize: 11),
                 ),
               ]),
               const SizedBox(height: 6),
