@@ -1,11 +1,14 @@
 import 'dart:math';
 import 'package:BillingueApp/models/gamification_model.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Badge;
 import '../../core/theme.dart';
 import '../../models/lesson_model.dart';
 import '../../services/gamification_service.dart';
 import '../../services/user_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/badge_service.dart';
+import '../../data/lessons_data.dart';
+import '../../widgets/badge_notification.dart';
 import 'main_screen.dart';
 
 class ResultScreen extends StatefulWidget {
@@ -18,6 +21,12 @@ class ResultScreen extends StatefulWidget {
   final String uid;
   final int errorCount;
 
+  /// Badges déjà obtenus avant la leçon (pour annoncer les nouveaux).
+  final Set<String> badgesBefore;
+
+  /// true si la leçon est terminée pour la première fois.
+  final bool firstCompletion;
+
   const ResultScreen({
     super.key,
     required this.lesson,
@@ -28,6 +37,8 @@ class ResultScreen extends StatefulWidget {
     required this.progress,
     required this.uid,
     required this.errorCount,
+    this.badgesBefore = const {},
+    this.firstCompletion = false,
   });
 
   @override
@@ -115,6 +126,45 @@ class _ResultScreenState extends State<ResultScreen>
       // Notification de félicitation
       await NotificationService()
           .showCongrats(widget.lesson.title);
+    }
+
+    if (!mounted) return;
+    await _announceNewLesson();
+    await _announceNewBadges();
+  }
+
+  /// « Nouvelle leçon disponible » : la leçon suivante vient d'être débloquée.
+  /// (La 2e leçon est ouverte d'office, donc on ne l'annonce pas.)
+  Future<void> _announceNewLesson() async {
+    if (!widget.firstCompletion) return;
+    final all = LessonsData.allLessons;
+    final i = all.indexWhere((l) => l.id == widget.lesson.id);
+    if (i < 1 || i + 1 >= all.length) return;
+    final next = all[i + 1];
+    if (widget.progress.isLessonCompleted(next.id)) return;
+
+    await NotificationService().showNewLesson(next.title);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('📚 Nouvelle leçon disponible : ${next.title}'),
+      backgroundColor: AppTheme.primary,
+      behavior: SnackBarBehavior.floating,
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ));
+  }
+
+  /// « Badge obtenu » : bannière dans l'app + notification système.
+  Future<void> _announceNewBadges() async {
+    final earned = BadgeService()
+        .getBadges(widget.progress)
+        .where((b) => b.earned && !widget.badgesBefore.contains(b.id));
+    for (final Badge badge in earned) {
+      if (!mounted) return;
+      showBadgeNotification(context, badge);
+      await NotificationService().showBadgeEarned(badge.emoji, badge.title);
+      // Une bannière à la fois.
+      await Future.delayed(const Duration(milliseconds: 3500));
     }
   }
 

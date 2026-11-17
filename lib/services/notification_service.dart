@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
@@ -59,6 +60,15 @@ class NotificationService {
           'Commence ta journée avec $minutes min de Baoulé ! 🇨🇮',
       hour: 8,
       minute: 0,
+    );
+
+    // Défi du jour à 12h30 (les défis changent chaque jour)
+    await _scheduleDailyAt(
+      id: 4,
+      title: 'Défi du jour 🎯',
+      body: "Un nouveau défi t'attend : relève-le pour gagner des XP bonus !",
+      hour: 12,
+      minute: 30,
     );
 
     // Rappel si pas de connexion depuis 2 jours
@@ -124,6 +134,7 @@ class NotificationService {
 
   // Notification immédiate de félicitation
   Future<void> showCongrats(String lessonTitle) async {
+    if (kIsWeb) return;
     await _notifications.show(
       10,
       'Leçon terminée ! 🏆',
@@ -138,6 +149,45 @@ class NotificationService {
         iOS: DarwinNotificationDetails(),
       ),
     );
+  }
+
+  // Notification immédiate : badge obtenu
+  Future<void> showBadgeEarned(String emoji, String title) => _showNow(
+        11,
+        'Badge obtenu ! $emoji',
+        'Bravo, tu as débloqué le badge « $title ».',
+      );
+
+  // Notification immédiate : nouvelle leçon disponible
+  Future<void> showNewLesson(String lessonTitle) => _showNow(
+        12,
+        'Nouvelle leçon disponible 📚',
+        '« $lessonTitle » est débloquée. Continue ton apprentissage !',
+      );
+
+  /// Notification immédiate. Pas de notification système sur le web
+  /// (le plugin ne le gère pas) : l'app affiche alors ses propres bannières.
+  Future<void> _showNow(int id, String title, String body) async {
+    if (kIsWeb) return;
+    try {
+      await _notifications.show(
+        id,
+        title,
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'billingue_progress',
+            'Billingue Progrès',
+            channelDescription: 'Badges obtenus et nouvelles leçons',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Notification impossible : $e');
+    }
   }
 
   Future<void> cancelAll() async {

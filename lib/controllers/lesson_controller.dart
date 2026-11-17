@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/badge_service.dart';
 import '../models/lesson_model.dart';
 import '../core/constants.dart';
 
@@ -14,12 +15,23 @@ class LessonController with ChangeNotifier {
   String? _selectedAnswer;
   bool _isCorrect = false;
 
+  /// Badges déjà obtenus au début de la leçon (pour repérer les nouveaux).
+  late final Set<String> badgesBefore;
+
+  /// true si la leçon vient d'être terminée pour la première fois.
+  bool firstCompletion = false;
+
   LessonController({
     required this.lesson,
     required this.progress,
   }) {
     _questions =
         lesson.getQuestionsForObjectif(progress.objectif);
+    badgesBefore = BadgeService()
+        .getBadges(progress)
+        .where((b) => b.earned)
+        .map((b) => b.id)
+        .toSet();
   }
 
   int get currentIndex => _currentIndex;
@@ -67,6 +79,7 @@ class LessonController with ChangeNotifier {
     }
     // Leçon terminée — l'XP n'est créditée qu'ici, en même temps que la
     // sauvegarde Firestore (result_screen). Quitter en cours = 0 XP.
+    firstCompletion = !progress.isLessonCompleted(lesson.id);
     progress.addXP(earnedXP);
     progress.completeLesson(
       lesson.id,

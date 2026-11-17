@@ -171,6 +171,8 @@ class _LessonScreenState extends State<LessonScreen>
           progress: widget.progress,
           uid: widget.uid,
           errorCount: _ctrl.errorCount,
+          badgesBefore: _ctrl.badgesBefore,
+          firstCompletion: _ctrl.firstCompletion,
         ),
         transitionsBuilder: (_, anim, __, child) =>
             FadeTransition(opacity: anim, child: child),
