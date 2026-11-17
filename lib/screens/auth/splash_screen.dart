@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/theme.dart';
 import '../../services/user_service.dart';
-import '../../models/lesson_model.dart';
 import '../app/main_screen.dart';
 import 'auth_widgets.dart';
 import 'welcome_screen.dart';
@@ -124,7 +123,7 @@ class _SplashScreenState extends State<SplashScreen>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 30,
                           offset: const Offset(0, 10),
                         )
@@ -152,7 +151,7 @@ class _SplashScreenState extends State<SplashScreen>
                         'Apprend le baoulé avec Billingue',
                         style: TextStyle(
                             fontSize: 14,
-                            color: Colors.white.withOpacity(0.9)),
+                            color: Colors.white.withValues(alpha: 0.9)),
                       ),
                     ],
                   ),

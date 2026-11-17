@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../core/secrets.dart';
 
@@ -22,7 +23,7 @@ Tes règles :
 
 Vocabulaire de base que tu maîtrises :
 - Akwaba = Bienvenue/Bonjour
-- N\'dɛ = Comment vas-tu ?
+- N'dɛ = Comment vas-tu ?
 - Mi si = Je vais bien
 - Mɛ = Merci
 - Yako = Courage/Condoléances
@@ -35,6 +36,10 @@ Vocabulaire de base que tu maîtrises :
   final List<Map<String, String>> _history = [];
 
   Future<String> sendMessage(String message) async {
+    if (!Secrets.hasAnthropicKey) {
+      return 'Aya n\'est pas configurée : lance l\'app avec '
+          '--dart-define-from-file=secrets.json (voir README).';
+    }
     try {
       _history.add({'role': 'user', 'content': message});
 
@@ -44,6 +49,8 @@ Vocabulaire de base que tu maîtrises :
           'Content-Type': 'application/json',
           'x-api-key': Secrets.anthropicApiKey,
           'anthropic-version': '2023-06-01',
+          // Requis par l'API pour un appel depuis le navigateur (version web).
+          if (kIsWeb) 'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: jsonEncode({
           'model': _model,

@@ -34,7 +34,7 @@ class BadgesScreen extends StatelessWidget {
                           height: 38,
                           decoration: BoxDecoration(
                             color:
-                                Colors.white.withOpacity(0.2),
+                                Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.arrow_back,
@@ -53,7 +53,7 @@ class BadgesScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -70,14 +70,14 @@ class BadgesScreen extends StatelessWidget {
                             Text('Obtenus',
                                 style: TextStyle(
                                     color: Colors.white
-                                        .withOpacity(0.8),
+                                        .withValues(alpha: 0.8),
                                     fontSize: 12)),
                           ]),
                           Container(
                               width: 1,
                               height: 40,
                               color:
-                                  Colors.white.withOpacity(0.3)),
+                                  Colors.white.withValues(alpha: 0.3)),
                           Column(children: [
                             Text('${badges.length - earned}',
                                 style: const TextStyle(
@@ -88,14 +88,14 @@ class BadgesScreen extends StatelessWidget {
                             Text('À débloquer',
                                 style: TextStyle(
                                     color: Colors.white
-                                        .withOpacity(0.8),
+                                        .withValues(alpha: 0.8),
                                     fontSize: 12)),
                           ]),
                           Container(
                               width: 1,
                               height: 40,
                               color:
-                                  Colors.white.withOpacity(0.3)),
+                                  Colors.white.withValues(alpha: 0.3)),
                           Column(children: [
                             Text(
                                 '${earned > 0 ? (earned / badges.length * 100).round() : 0}%',
@@ -107,7 +107,7 @@ class BadgesScreen extends StatelessWidget {
                             Text('Complété',
                                 style: TextStyle(
                                     color: Colors.white
-                                        .withOpacity(0.8),
+                                        .withValues(alpha: 0.8),
                                     fontSize: 12)),
                           ]),
                         ],
@@ -147,7 +147,7 @@ class BadgesScreen extends StatelessWidget {
                         border: Border.all(
                           color: badge.earned
                               ? AppTheme.primary
-                                  .withOpacity(0.3)
+                                  .withValues(alpha: 0.3)
                               : Colors.grey.shade200,
                           width: badge.earned ? 2 : 1,
                         ),
@@ -155,7 +155,7 @@ class BadgesScreen extends StatelessWidget {
                             ? [
                                 BoxShadow(
                                   color: AppTheme.primary
-                                      .withOpacity(0.1),
+                                      .withValues(alpha: 0.1),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
@@ -206,7 +206,7 @@ class BadgesScreen extends StatelessWidget {
                                         vertical: 3),
                                 decoration: BoxDecoration(
                                   color: AppTheme.secondary
-                                      .withOpacity(0.15),
+                                      .withValues(alpha: 0.15),
                                   borderRadius:
                                       BorderRadius.circular(8),
                                 ),

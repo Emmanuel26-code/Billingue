@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/theme.dart';
 import '../models/lesson_model.dart';
-import '../services/hearts_service.dart';
 
 class PenaltyOverlay extends StatefulWidget {
   final UserProgress progress;
@@ -83,7 +82,7 @@ class _PenaltyOverlayState extends State<PenaltyOverlay>
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withOpacity(0.85),
+      color: Colors.black.withValues(alpha: 0.85),
       child: SafeArea(
         child: FadeTransition(
           opacity: _fade,
@@ -124,7 +123,7 @@ class _PenaltyOverlayState extends State<PenaltyOverlay>
                     Text(
                       'Prends une pause et reviens dans',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 15),
                       textAlign: TextAlign.center,
                     ),
@@ -135,7 +134,7 @@ class _PenaltyOverlayState extends State<PenaltyOverlay>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 32, vertical: 16),
                       decoration: BoxDecoration(
-                        color: AppTheme.danger.withOpacity(0.2),
+                        color: AppTheme.danger.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                             color: AppTheme.danger, width: 2),
@@ -155,7 +154,7 @@ class _PenaltyOverlayState extends State<PenaltyOverlay>
                     Text(
                       'Tes vies se régénèrent automatiquement\n(1 vie toutes les 30 minutes)',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 12),
                       textAlign: TextAlign.center,
                     ),
@@ -215,12 +214,12 @@ class _PenaltyOverlayState extends State<PenaltyOverlay>
                         padding: const EdgeInsets.symmetric(
                             vertical: 16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius:
                               BorderRadius.circular(28),
                           border: Border.all(
                               color:
-                                  Colors.white.withOpacity(0.3)),
+                                  Colors.white.withValues(alpha: 0.3)),
                         ),
                         child: const Text(
                           'Revenir à l\'accueil',
@@ -237,7 +236,7 @@ class _PenaltyOverlayState extends State<PenaltyOverlay>
                     Text(
                       '💡 Astuce : Achète des freezes de série\npour protéger ta progression !',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                           fontSize: 11),
                       textAlign: TextAlign.center,
                     ),

@@ -189,7 +189,7 @@ class _AfricaPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.85)
+      ..color = color.withValues(alpha: 0.85)
       ..style = PaintingStyle.fill;
     final w = size.width;
     final h = size.height;

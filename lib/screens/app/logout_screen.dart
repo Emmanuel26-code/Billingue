@@ -146,7 +146,7 @@ class _LogoutScreenState extends State<LogoutScreen>
                       width: 110,
                       height: 110,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -205,7 +205,7 @@ class _LogoutScreenState extends State<LogoutScreen>
                       _currentStep,
                       key: ValueKey(_currentStep),
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
@@ -227,7 +227,7 @@ class _LogoutScreenState extends State<LogoutScreen>
                             LinearProgressIndicator(
                           value: v,
                           backgroundColor:
-                              Colors.white.withOpacity(0.25),
+                              Colors.white.withValues(alpha: 0.25),
                           valueColor:
                               const AlwaysStoppedAnimation<Color>(
                                   Colors.white),
@@ -239,7 +239,7 @@ class _LogoutScreenState extends State<LogoutScreen>
                     Text(
                       '${(_progress * 100).round()}%',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
@@ -251,7 +251,7 @@ class _LogoutScreenState extends State<LogoutScreen>
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Column(
@@ -279,7 +279,7 @@ class _LogoutScreenState extends State<LogoutScreen>
                                 color: isDone
                                     ? Colors.white
                                     : Colors.white
-                                        .withOpacity(0.4),
+                                        .withValues(alpha: 0.4),
                                 size: 20,
                               ),
                             ),
@@ -289,7 +289,7 @@ class _LogoutScreenState extends State<LogoutScreen>
                               style: TextStyle(
                                 color: isDone
                                     ? Colors.white
-                                    : Colors.white.withOpacity(0.5),
+                                    : Colors.white.withValues(alpha: 0.5),
                                 fontSize: 13,
                                 fontWeight: isDone
                                     ? FontWeight.w700
@@ -362,7 +362,7 @@ class _LogoutScreenState extends State<LogoutScreen>
                       child: Text(
                         'Déconnecter sans sauvegarder',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 13,
                         ),
                       ),
@@ -376,21 +376,21 @@ class _LogoutScreenState extends State<LogoutScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.lock_outline,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               size: 16),
                           const SizedBox(width: 8),
                           Text(
                             'Tes données sont en sécurité',
                             style: TextStyle(
                               color:
-                                  Colors.white.withOpacity(0.8),
+                                  Colors.white.withValues(alpha: 0.8),
                               fontSize: 12,
                             ),
                           ),

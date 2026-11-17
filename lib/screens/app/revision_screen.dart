@@ -132,8 +132,9 @@ class _RevisionScreenState extends State<RevisionScreen>
 
   AnswerState _state(String opt) {
     if (!_answered) return AnswerState.idle;
-    if (opt == _questions[_currentIndex].correctAnswer)
+    if (opt == _questions[_currentIndex].correctAnswer) {
       return AnswerState.correct;
+    }
     if (opt == _selected) return AnswerState.incorrect;
     return AnswerState.idle;
   }
@@ -252,7 +253,7 @@ class _RevisionScreenState extends State<RevisionScreen>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
-                      color: Colors.purple.withOpacity(0.1),
+                      color: Colors.purple.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -268,7 +269,7 @@ class _RevisionScreenState extends State<RevisionScreen>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
-                      color: AppTheme.secondary.withOpacity(0.1),
+                      color: AppTheme.secondary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -303,7 +304,7 @@ class _RevisionScreenState extends State<RevisionScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
-                          color: Colors.purple.withOpacity(0.1),
+                          color: Colors.purple.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(q.instruction,
@@ -367,8 +368,8 @@ class _RevisionScreenState extends State<RevisionScreen>
       padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
       decoration: BoxDecoration(
         color: _isCorrect
-            ? AppTheme.secondary.withOpacity(0.08)
-            : AppTheme.danger.withOpacity(0.07),
+            ? AppTheme.secondary.withValues(alpha: 0.08)
+            : AppTheme.danger.withValues(alpha: 0.07),
         border: Border(
           top: BorderSide(
               color: _isCorrect

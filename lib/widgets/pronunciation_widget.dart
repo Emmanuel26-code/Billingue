@@ -152,7 +152,7 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
           padding: const EdgeInsets.symmetric(
               horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: Colors.purple.withOpacity(0.1),
+            color: Colors.purple.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Row(
@@ -198,7 +198,7 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
                   color: _borderColor, width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: _borderColor.withOpacity(0.15),
+                  color: _borderColor.withValues(alpha: 0.15),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -229,11 +229,11 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
                       horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
                     color:
-                        AppTheme.primary.withOpacity(0.1),
+                        AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                         color: AppTheme.primary
-                            .withOpacity(0.3)),
+                            .withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -270,8 +270,8 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: _state == PronunciationState.success
-                  ? AppTheme.secondary.withOpacity(0.08)
-                  : AppTheme.danger.withOpacity(0.07),
+                  ? AppTheme.secondary.withValues(alpha: 0.08)
+                  : AppTheme.danger.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: _state == PronunciationState.success
@@ -409,7 +409,7 @@ class _PronunciationWidgetState extends State<PronunciationWidget>
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.red.withOpacity(0.4),
+              color: Colors.red.withValues(alpha: 0.4),
               blurRadius: 20,
               spreadRadius: 4,
             ),

@@ -77,7 +77,7 @@ class _XPRewardPopupState extends State<XPRewardPopup>
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primary.withOpacity(0.3),
+                      color: AppTheme.primary.withValues(alpha: 0.3),
                       blurRadius: 30,
                       offset: const Offset(0, 10),
                     ),
@@ -141,10 +141,10 @@ class _Bonus extends StatelessWidget {
       padding:
           const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.1),
+        color: AppTheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-            color: AppTheme.primary.withOpacity(0.3)),
+            color: AppTheme.primary.withValues(alpha: 0.3)),
       ),
       child: Text(label,
           style: const TextStyle(
@@ -166,7 +166,7 @@ void showXPReward(
 }) {
   showDialog(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.3),
+    barrierColor: Colors.black.withValues(alpha: 0.3),
     barrierDismissible: true,
     builder: (_) => XPRewardPopup(
       xpEarned: xpEarned,

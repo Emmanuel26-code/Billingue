@@ -98,8 +98,12 @@ class SpeechService {
       (i) => List.generate(t.length + 1, (j) => 0),
     );
 
-    for (int i = 0; i <= s.length; i++) d[i][0] = i;
-    for (int j = 0; j <= t.length; j++) d[0][j] = j;
+    for (int i = 0; i <= s.length; i++) {
+      d[i][0] = i;
+    }
+    for (int j = 0; j <= t.length; j++) {
+      d[0][j] = j;
+    }
 
     for (int i = 1; i <= s.length; i++) {
       for (int j = 1; j <= t.length; j++) {

@@ -38,7 +38,7 @@ class _LoadingOverlayState extends State<LoadingOverlay>
     return FadeTransition(
       opacity: _fade,
       child: Container(
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withValues(alpha: 0.5),
         child: Center(
           child: Container(
             padding: const EdgeInsets.symmetric(
@@ -48,7 +48,7 @@ class _LoadingOverlayState extends State<LoadingOverlay>
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
+                  color: Colors.black.withValues(alpha: 0.15),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),

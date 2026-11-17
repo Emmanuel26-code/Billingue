@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../models/lesson_model.dart';
 import '../../services/tts_service.dart';
-import '../../widgets/loading_overlay.dart';
 import 'lesson_screen.dart';
 import '../../services/audio_service.dart';
 
@@ -232,7 +231,7 @@ class _CourseScreenState extends State<CourseScreen>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.1),
+                      color: AppTheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -258,7 +257,7 @@ class _CourseScreenState extends State<CourseScreen>
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                      color: _timeColor.withOpacity(0.3)),
+                      color: _timeColor.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   children: [
@@ -328,7 +327,7 @@ class _CourseScreenState extends State<CourseScreen>
                         horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
                       color: const Color(0xFF5B4FCF)
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
@@ -394,12 +393,12 @@ class _CourseScreenState extends State<CourseScreen>
                                   BorderRadius.circular(24),
                               border: Border.all(
                                   color: AppTheme.primary
-                                      .withOpacity(0.2),
+                                      .withValues(alpha: 0.2),
                                   width: 2),
                               boxShadow: [
                                 BoxShadow(
                                   color: AppTheme.primary
-                                      .withOpacity(0.08),
+                                      .withValues(alpha: 0.08),
                                   blurRadius: 20,
                                   offset: const Offset(0, 8),
                                 ),
@@ -427,7 +426,7 @@ class _CourseScreenState extends State<CourseScreen>
                                   height: 3,
                                   decoration: BoxDecoration(
                                     color: AppTheme.primary
-                                        .withOpacity(0.3),
+                                        .withValues(alpha: 0.3),
                                     borderRadius:
                                         BorderRadius.circular(2),
                                   ),
@@ -460,10 +459,10 @@ class _CourseScreenState extends State<CourseScreen>
                                     decoration: BoxDecoration(
                                       color: _isSpeaking
                                           ? AppTheme.primary
-                                          : AppTheme.primary.withOpacity(0.1),
+                                          : AppTheme.primary.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(24),
                                       border: Border.all(
-                                          color: AppTheme.primary.withOpacity(0.3)),
+                                          color: AppTheme.primary.withValues(alpha: 0.3)),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -512,7 +511,7 @@ class _CourseScreenState extends State<CourseScreen>
                                     BorderRadius.circular(16),
                                 border: Border.all(
                                     color: AppTheme.secondary
-                                        .withOpacity(0.3)),
+                                        .withValues(alpha: 0.3)),
                               ),
                               child: Column(
                                 crossAxisAlignment:

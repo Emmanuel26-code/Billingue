@@ -75,13 +75,13 @@ class _CongratsScreenState extends State<CongratsScreen>
                   Text('Bon apprentissage',
                       style: TextStyle(
                           fontSize: 16,
-                          color: Colors.white.withOpacity(0.85))),
+                          color: Colors.white.withValues(alpha: 0.85))),
                   const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text('Objectif : ${widget.goal}',

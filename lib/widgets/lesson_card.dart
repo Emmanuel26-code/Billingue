@@ -67,14 +67,14 @@ class _LessonCardState extends State<LessonCard>
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: widget.isCompleted
-                  ? AppTheme.secondary.withOpacity(0.07)
+                  ? AppTheme.secondary.withValues(alpha: 0.07)
                   : Colors.white,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: _borderColor, width: 2),
               boxShadow: _unlocked
                   ? [
                       BoxShadow(
-                        color: _borderColor.withOpacity(0.15),
+                        color: _borderColor.withValues(alpha: 0.15),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
@@ -88,7 +88,7 @@ class _LessonCardState extends State<LessonCard>
                   height: 52,
                   decoration: BoxDecoration(
                     color: _unlocked
-                        ? _borderColor.withOpacity(0.12)
+                        ? _borderColor.withValues(alpha: 0.12)
                         : Colors.grey.shade100,
                     shape: BoxShape.circle,
                   ),

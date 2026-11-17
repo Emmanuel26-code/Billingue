@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../services/auth_service.dart';
-import '../app/main_screen.dart';
 import 'auth_widgets.dart';
 import 'congrats_screen.dart';
 

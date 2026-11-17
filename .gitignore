@@ -43,4 +43,5 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-lib/core/secrets.dart
+# Clés locales (voir secrets.example.json)
+secrets.json

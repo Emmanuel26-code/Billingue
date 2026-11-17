@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/gamification_model.dart';
-import '../models/lesson_model.dart';
 
 class GamificationService {
   static final GamificationService _i =
@@ -53,18 +51,21 @@ class GamificationService {
 
     // Bonus précision
     final accuracy = correctCount / totalQuestions;
-    if (accuracy == 1.0) multiplier += 0.5;      // +50% parfait
-    else if (accuracy >= 0.9) multiplier += 0.3; // +30%
+    if (accuracy == 1.0) {
+      multiplier += 0.5;      // +50% parfait
+    } else if (accuracy >= 0.9) multiplier += 0.3; // +30%
     else if (accuracy >= 0.7) multiplier += 0.1; // +10%
 
     // Bonus vitesse (moins de 30 secondes par question)
     final avgTime = timeSeconds / totalQuestions;
-    if (avgTime < 10) multiplier += 0.3;
-    else if (avgTime < 20) multiplier += 0.15;
+    if (avgTime < 10) {
+      multiplier += 0.3;
+    } else if (avgTime < 20) multiplier += 0.15;
 
     // Bonus série
-    if (streak >= 30) multiplier += 0.5;
-    else if (streak >= 7) multiplier += 0.3;
+    if (streak >= 30) {
+      multiplier += 0.5;
+    } else if (streak >= 7) multiplier += 0.3;
     else if (streak >= 3) multiplier += 0.1;
 
     return (baseXP * multiplier).round();

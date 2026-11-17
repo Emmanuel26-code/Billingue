@@ -1,6 +1,4 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/lesson_model.dart';
 
 class HeartsService {
   static final HeartsService _i = HeartsService._internal();

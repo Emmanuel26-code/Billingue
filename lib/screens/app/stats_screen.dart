@@ -143,7 +143,7 @@ class _StatsScreenState extends State<StatsScreen>
                                 width: 38,
                                 height: 38,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(Icons.arrow_back,
@@ -168,7 +168,7 @@ class _StatsScreenState extends State<StatsScreen>
                           width: double.infinity,
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
+                            color: Colors.white.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Column(
@@ -190,7 +190,7 @@ class _StatsScreenState extends State<StatsScreen>
                               Text(
                                 'Niveau actuel',
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                   fontSize: 13,
                                 ),
                               ),
@@ -206,7 +206,7 @@ class _StatsScreenState extends State<StatsScreen>
                                       _niveau,
                                       style: TextStyle(
                                         color:
-                                            Colors.white.withOpacity(0.7),
+                                            Colors.white.withValues(alpha: 0.7),
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -215,7 +215,7 @@ class _StatsScreenState extends State<StatsScreen>
                                       _prochainNiveau,
                                       style: TextStyle(
                                         color:
-                                            Colors.white.withOpacity(0.7),
+                                            Colors.white.withValues(alpha: 0.7),
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -235,7 +235,7 @@ class _StatsScreenState extends State<StatsScreen>
                                         LinearProgressIndicator(
                                       value: v,
                                       backgroundColor:
-                                          Colors.white.withOpacity(0.2),
+                                          Colors.white.withValues(alpha: 0.2),
                                       valueColor:
                                           const AlwaysStoppedAnimation
                                               <Color>(Colors.white),
@@ -247,7 +247,7 @@ class _StatsScreenState extends State<StatsScreen>
                                 Text(
                                   '${(_progressToNext * 100).round()}% vers $_prochainNiveau',
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                     fontSize: 11,
                                   ),
                                 ),
@@ -255,7 +255,7 @@ class _StatsScreenState extends State<StatsScreen>
                                 Text(
                                   '🎉 Tu as atteint le niveau maximum !',
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -431,7 +431,7 @@ class _StatsScreenState extends State<StatsScreen>
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color: done
-                              ? AppTheme.secondary.withOpacity(0.4)
+                              ? AppTheme.secondary.withValues(alpha: 0.4)
                               : AppTheme.border,
                         ),
                       ),
@@ -444,7 +444,7 @@ class _StatsScreenState extends State<StatsScreen>
                             decoration: BoxDecoration(
                               color: done
                                   ? AppTheme.secondary
-                                      .withOpacity(0.1)
+                                      .withValues(alpha: 0.1)
                                   : Colors.grey.shade50,
                               shape: BoxShape.circle,
                             ),
@@ -494,7 +494,7 @@ class _StatsScreenState extends State<StatsScreen>
                                           vertical: 5),
                                   decoration: BoxDecoration(
                                     color: AppTheme.secondary
-                                        .withOpacity(0.1),
+                                        .withValues(alpha: 0.1),
                                     borderRadius:
                                         BorderRadius.circular(12),
                                   ),
@@ -554,13 +554,13 @@ class _StatsScreenState extends State<StatsScreen>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        AppTheme.primary.withOpacity(0.08),
-                        AppTheme.primary.withOpacity(0.03),
+                        AppTheme.primary.withValues(alpha: 0.08),
+                        AppTheme.primary.withValues(alpha: 0.03),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: AppTheme.primary.withOpacity(0.2),
+                      color: AppTheme.primary.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Column(

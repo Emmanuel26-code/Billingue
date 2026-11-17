@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../core/theme.dart';
 import '../models/lesson_model.dart';
-import '../services/hearts_service.dart';
 
 class HeartsTimerWidget extends StatefulWidget {
   final UserProgress progress;

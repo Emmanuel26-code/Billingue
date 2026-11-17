@@ -9,10 +9,8 @@ import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/avatar_picker.dart';
-import '../../widgets/hearts_timer_widget.dart';
 import '../auth/welcome_screen.dart';
 import 'stats_screen.dart';
-import '../../widgets/loading_overlay.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserProgress progress;
@@ -145,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: Colors.white.withOpacity(0.6), width: 3),
+                                color: Colors.white.withValues(alpha: 0.6), width: 3),
                           ),
                           child: ClipOval(
                             child: Image.asset(
@@ -184,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 3),
                   Text('Apprenant Baoulé 🇨🇮',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.8), fontSize: 13)),
+                          color: Colors.white.withValues(alpha: 0.8), fontSize: 13)),
                 ]),
               ),
             ),
@@ -339,7 +337,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Switch(
                       value: _notificationsEnabled,
                       onChanged: _toggleNotifications,
-                      activeColor: AppTheme.primary,
+                      activeThumbColor: AppTheme.primary,
                     ),
                   ]),
                 ),

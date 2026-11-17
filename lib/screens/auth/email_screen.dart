@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme.dart';
 import 'auth_widgets.dart';
 import 'password_screen.dart';
 

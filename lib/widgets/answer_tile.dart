@@ -52,9 +52,9 @@ class _AnswerTileState extends State<AnswerTile>
   Color get _bg {
     switch (widget.state) {
       case AnswerState.correct:
-        return AppTheme.secondary.withOpacity(0.1);
+        return AppTheme.secondary.withValues(alpha: 0.1);
       case AnswerState.incorrect:
-        return AppTheme.danger.withOpacity(0.1);
+        return AppTheme.danger.withValues(alpha: 0.1);
       case AnswerState.idle:
         return Colors.white;
     }

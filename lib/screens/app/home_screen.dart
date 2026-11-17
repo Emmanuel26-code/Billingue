@@ -2,9 +2,7 @@ import 'package:BillingueApp/screens/app/revision_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../data/lessons_data.dart';
-import '../../models/gamification_model.dart';
 import '../../models/lesson_model.dart';
-import '../../services/gamification_service.dart';
 import '../../widgets/lesson_card.dart';
 import 'course_screen.dart';
 
@@ -143,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen>
                     borderRadius: BorderRadius.circular(18),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.purple.withOpacity(0.3),
+                        color: Colors.purple.withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -154,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen>
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
@@ -173,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen>
                           Text(
                             'Révise les leçons déjà apprises',
                             style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 fontSize: 12),
                           ),
                         ],
@@ -198,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
+                    color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text('$total leçons',
@@ -308,13 +306,13 @@ class _Header extends StatelessWidget {
                       Text('Objectif : ${progress.objectif}',
                           style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withOpacity(0.85))),
+                              color: Colors.white.withValues(alpha: 0.85))),
                     ],
                   ),
                   // Avatar mis à jour automatiquement
                   CircleAvatar(
                     radius: 22,
-                    backgroundColor: Colors.white.withOpacity(0.2),
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
                     backgroundImage: AssetImage(progress.avatar),
                   ),
                 ],
@@ -337,12 +335,12 @@ class _Header extends StatelessWidget {
                 children: [
                   Text('XP : ${progress.xp} / $_xpMax',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 12,
                           fontWeight: FontWeight.w600)),
                   Text('$done/$total leçons',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 12,
                           fontWeight: FontWeight.w600)),
                 ],
@@ -352,7 +350,7 @@ class _Header extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
                 child: LinearProgressIndicator(
                   value: _xpProgress,
-                  backgroundColor: Colors.white.withOpacity(0.3),
+                  backgroundColor: Colors.white.withValues(alpha: 0.3),
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                   minHeight: 8,
                 ),
@@ -361,14 +359,14 @@ class _Header extends StatelessWidget {
               Row(children: [
                 Text('🎯 Défis du jour',
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 12,
                         fontWeight: FontWeight.w700)),
                 const Spacer(),
                 Text(
                   '${progress.dailyChallenges.where((c) => c.completed).length}/${progress.dailyChallenges.length} complétés',
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 11),
                 ),
               ]),
@@ -382,7 +380,7 @@ class _Header extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: c.completed
                             ? Colors.white
-                            : Colors.white.withOpacity(0.3),
+                            : Colors.white.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -407,7 +405,7 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [

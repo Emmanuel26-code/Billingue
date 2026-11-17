@@ -168,10 +168,12 @@ class _LessonScreenState extends State<LessonScreen>
 
   AnswerState _state(String opt) {
     if (!_ctrl.answered) return AnswerState.idle;
-    if (opt == _ctrl.currentQuestion.correctAnswer)
+    if (opt == _ctrl.currentQuestion.correctAnswer) {
       return AnswerState.correct;
-    if (opt == _ctrl.selectedAnswer)
+    }
+    if (opt == _ctrl.selectedAnswer) {
       return AnswerState.incorrect;
+    }
     return AnswerState.idle;
   }
 
@@ -263,7 +265,7 @@ class _LessonScreenState extends State<LessonScreen>
                                       vertical: 7),
                               decoration: BoxDecoration(
                                 color: AppTheme.primary
-                                    .withOpacity(0.1),
+                                    .withValues(alpha: 0.1),
                                 borderRadius:
                                     BorderRadius.circular(10),
                               ),
@@ -290,7 +292,7 @@ class _LessonScreenState extends State<LessonScreen>
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black
-                                        .withOpacity(0.04),
+                                        .withValues(alpha: 0.04),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   )
@@ -326,13 +328,13 @@ class _LessonScreenState extends State<LessonScreen>
                                             vertical: 8),
                                     decoration: BoxDecoration(
                                       color: AppTheme.primary
-                                          .withOpacity(0.1),
+                                          .withValues(alpha: 0.1),
                                       borderRadius:
                                           BorderRadius.circular(
                                               20),
                                       border: Border.all(
                                           color: AppTheme.primary
-                                              .withOpacity(0.3)),
+                                              .withValues(alpha: 0.3)),
                                     ),
                                     child: Row(
                                       mainAxisSize:
@@ -463,8 +465,8 @@ class _FeedbackPanel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
       decoration: BoxDecoration(
         color: correct
-            ? AppTheme.secondary.withOpacity(0.08)
-            : AppTheme.danger.withOpacity(0.07),
+            ? AppTheme.secondary.withValues(alpha: 0.08)
+            : AppTheme.danger.withValues(alpha: 0.07),
         border: Border(
           top: BorderSide(
               color: correct
@@ -501,8 +503,8 @@ class _FeedbackPanel extends StatelessWidget {
                     horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: correct
-                      ? AppTheme.secondary.withOpacity(0.15)
-                      : AppTheme.danger.withOpacity(0.1),
+                      ? AppTheme.secondary.withValues(alpha: 0.15)
+                      : AppTheme.danger.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(

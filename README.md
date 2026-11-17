@@ -51,6 +51,22 @@ flutter run
 
 ---
 
+## 🔑 Clés API
+
+Aucune clé n'est stockée dans le dépôt. Elles sont injectées au lancement :
+
+```bash
+cp secrets.example.json secrets.json   # secrets.json est ignoré par git
+# remplis ANTHROPIC_API_KEY (https://console.anthropic.com/settings/keys)
+flutter run --dart-define-from-file=secrets.json
+flutter build web --dart-define-from-file=secrets.json
+```
+
+> ⚠️ Une clé passée ainsi reste lisible dans l'app compilée (surtout la version web).
+> Pour une version publique, passer le chat par un backend (ex. Cloud Function Firebase).
+
+---
+
 ## 📚 Leçons disponibles
 
 | # | Unité | Contenu |

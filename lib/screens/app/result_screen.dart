@@ -339,7 +339,7 @@ class _ConfettiPainter extends CustomPainter {
     for (final p in particles) {
       final y =
           (t * p.speed * size.height * 1.5) % (size.height + 20);
-      paint.color = p.color.withOpacity(1 - t * 0.5);
+      paint.color = p.color.withValues(alpha: 1 - t * 0.5);
       canvas.save();
       canvas.translate(p.x * size.width, y);
       canvas.rotate(t * p.rot * pi * 2);

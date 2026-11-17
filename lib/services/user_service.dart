@@ -53,10 +53,10 @@ class UserService {
       'streakFreezes': streakFreezes,
       'xpToday': xpToday,
       'lastHeartLostAt': lastHeartLostAt != null
-          ? Timestamp.fromDate(lastHeartLostAt!)
+          ? Timestamp.fromDate(lastHeartLostAt)
           : null,
       'penaltyEndAt': penaltyEndAt != null
-          ? Timestamp.fromDate(penaltyEndAt!)
+          ? Timestamp.fromDate(penaltyEndAt)
           : null,
     });
   }

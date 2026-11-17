@@ -97,7 +97,7 @@ class _GamificationScreenState extends State<GamificationScreen>
                               height: 38,
                               decoration: BoxDecoration(
                                 color: Colors.white
-                                    .withOpacity(0.2),
+                                    .withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -160,7 +160,7 @@ class _GamificationScreenState extends State<GamificationScreen>
                             Text(level.label,
                                 style: TextStyle(
                                     color: Colors.white
-                                        .withOpacity(0.8),
+                                        .withValues(alpha: 0.8),
                                     fontSize: 11)),
                             Text(
                               level == UserLevel.legende
@@ -168,7 +168,7 @@ class _GamificationScreenState extends State<GamificationScreen>
                                   : '${progress.xp} / ${level.xpForNext} XP',
                               style: TextStyle(
                                   color: Colors.white
-                                      .withOpacity(0.8),
+                                      .withValues(alpha: 0.8),
                                   fontSize: 11,
                                   fontWeight:
                                       FontWeight.w700),
@@ -189,7 +189,7 @@ class _GamificationScreenState extends State<GamificationScreen>
                                 LinearProgressIndicator(
                               value: v,
                               backgroundColor:
-                                  Colors.white.withOpacity(0.3),
+                                  Colors.white.withValues(alpha: 0.3),
                               valueColor:
                                   const AlwaysStoppedAnimation
                                       <Color>(Colors.white),
@@ -481,7 +481,7 @@ class _StatPill extends StatelessWidget {
       padding:
           const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -515,7 +515,7 @@ class _InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(children: [
@@ -530,7 +530,7 @@ class _InfoCard extends StatelessWidget {
                   fontWeight: FontWeight.w800)),
           Text(subtitle,
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 11)),
         ]),
       ]),
@@ -738,7 +738,7 @@ class _ChestCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: chest.isAvailable
-              ? AppTheme.primary.withOpacity(0.08)
+              ? AppTheme.primary.withValues(alpha: 0.08)
               : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(

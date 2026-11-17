@@ -59,10 +59,10 @@ class _BadgeNotificationState extends State<BadgeNotification>
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             border:
-                Border.all(color: AppTheme.primary.withOpacity(0.3)),
+                Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -73,7 +73,7 @@ class _BadgeNotificationState extends State<BadgeNotification>
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Center(

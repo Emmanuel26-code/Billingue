@@ -92,7 +92,7 @@ class _AvatarPickerState extends State<AvatarPicker>
                 width: 90,
                 height: 90,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
+                  color: AppTheme.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: AppTheme.primary,
@@ -130,7 +130,7 @@ class _AvatarPickerState extends State<AvatarPicker>
                       duration: const Duration(milliseconds: 200),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppTheme.primary.withOpacity(0.15)
+                            ? AppTheme.primary.withValues(alpha: 0.15)
                             : Colors.grey.shade50,
                         shape: BoxShape.circle,
                         border: Border.all(

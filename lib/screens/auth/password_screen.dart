@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
-import '../../services/auth_service.dart';
-import '../app/main_screen.dart';
 import 'auth_widgets.dart';
 import 'time_screen.dart';
 
@@ -28,7 +26,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
   final _confirmCtrl = TextEditingController();
   bool _obscure1 = true;
   bool _obscure2 = true;
-  bool _loading = false;
+  final bool _loading = false;
   String? _error;
 
   @override

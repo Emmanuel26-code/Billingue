@@ -69,7 +69,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                         Text('Top apprenants Baoulé 🇨🇮',
                             style: TextStyle(
                               color:
-                                  Colors.white.withOpacity(0.85),
+                                  Colors.white.withValues(alpha: 0.85),
                               fontSize: 14,
                             )),
                         const SizedBox(height: 20),
@@ -79,7 +79,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                               horizontal: 20, vertical: 12),
                           decoration: BoxDecoration(
                             color:
-                                Colors.white.withOpacity(0.2),
+                                Colors.white.withValues(alpha: 0.2),
                             borderRadius:
                                 BorderRadius.circular(16),
                           ),
@@ -192,7 +192,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                             decoration: BoxDecoration(
                               color: isMe
                                   ? AppTheme.primary
-                                      .withOpacity(0.08)
+                                      .withValues(alpha: 0.08)
                                   : Colors.white,
                               borderRadius:
                                   BorderRadius.circular(16),
@@ -236,7 +236,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                                     width: 44,
                                     height: 44,
                                     color: AppTheme.primary
-                                        .withOpacity(0.1),
+                                        .withValues(alpha: 0.1),
                                     child: const Icon(
                                         Icons.person,
                                         color: AppTheme.primary),

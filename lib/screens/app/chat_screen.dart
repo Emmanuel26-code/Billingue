@@ -114,7 +114,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
+                        color: Colors.white.withValues(alpha: 0.25),
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
@@ -132,7 +132,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 fontWeight: FontWeight.w800)),
                         Text('Assistante Baoulé • En ligne',
                             style: TextStyle(
-                                color: Colors.white.withOpacity(0.85),
+                                color: Colors.white.withValues(alpha: 0.85),
                                 fontSize: 12)),
                       ],
                     ),
@@ -148,7 +148,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.stop_rounded,
@@ -201,7 +201,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Border(top: BorderSide(color: Colors.grey.shade200)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -3),
                 ),
@@ -284,10 +284,10 @@ class _ChatScreenState extends State<ChatScreen> {
             padding: const EdgeInsets.symmetric(
                 horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
+              color: AppTheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: AppTheme.primary.withOpacity(0.3)),
+                  color: AppTheme.primary.withValues(alpha: 0.3)),
             ),
             child: Text(
               suggestions[i],
@@ -354,7 +354,7 @@ class _MessageBubble extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
+                  color: AppTheme.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
@@ -385,7 +385,7 @@ class _MessageBubble extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -449,7 +449,7 @@ class _TypingBubbleState extends State<_TypingBubble>
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
+              color: AppTheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Center(
@@ -469,7 +469,7 @@ class _TypingBubbleState extends State<_TypingBubble>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -489,7 +489,7 @@ class _TypingBubbleState extends State<_TypingBubble>
                     height: 8,
                     decoration: BoxDecoration(
                       color: AppTheme.primary
-                          .withOpacity(0.3 + 0.7 * val),
+                          .withValues(alpha: 0.3 + 0.7 * val),
                       shape: BoxShape.circle,
                     ),
                   );
