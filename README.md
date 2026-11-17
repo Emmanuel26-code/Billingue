@@ -51,19 +51,29 @@ flutter run
 
 ---
 
-## 🔑 Clés API
+## 🤖 Chat avec Aya (Cloud Function)
 
-Aucune clé n'est stockée dans le dépôt. Elles sont injectées au lancement :
+L'app n'a **aucune clé** : elle appelle la Cloud Function `chatWithAya`
+(`functions/src/index.ts`), qui garde la clé Anthropic côté serveur,
+exige un utilisateur connecté, valide les messages et limite à 50 messages/jour/utilisateur.
+
+### Tester en local (émulateurs, aucune donnée réelle)
 
 ```bash
-cp secrets.example.json secrets.json   # secrets.json est ignoré par git
-# remplis ANTHROPIC_API_KEY (https://console.anthropic.com/settings/keys)
-flutter run --dart-define-from-file=secrets.json
-flutter build web --dart-define-from-file=secrets.json
+cd functions && npm install && npm run build && cd ..
+echo "ANTHROPIC_API_KEY=sk-ant-..." > functions/.secret.local   # ignoré par git
+firebase emulators:start --only auth,functions,firestore --project demo-billingue
+flutter run -d chrome --dart-define=USE_EMULATORS=true
 ```
 
-> ⚠️ Une clé passée ainsi reste lisible dans l'app compilée (surtout la version web).
-> Pour une version publique, passer le chat par un backend (ex. Cloud Function Firebase).
+### Déployer (plan Blaze requis pour les Cloud Functions)
+
+```bash
+firebase login
+firebase use fir-auth-921be
+firebase functions:secrets:set ANTHROPIC_API_KEY
+firebase deploy --only functions
+```
 
 ---
 

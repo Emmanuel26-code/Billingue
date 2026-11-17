@@ -25,16 +25,14 @@ class _ChatScreenState extends State<ChatScreen> {
     _sendWelcome();
   }
 
-  Future<void> _sendWelcome() async {
-    setState(() => _loading = true);
-    final response = await _ai.sendMessage('Présente-toi brièvement en 2 phrases.');
-    if (mounted) {
-      setState(() {
-        _messages.add(_Message(text: response, isUser: false));
-        _loading = false;
-      });
-      _scrollDown();
-    }
+  // Message d'accueil local : pas d'appel à l'API (donc pas de coût)
+  // à chaque ouverture de l'app.
+  void _sendWelcome() {
+    _messages.add(_Message(
+      text: 'Akwaba ! 👋 Je suis Aya, ton assistante pour apprendre le Baoulé. '
+          'Pose-moi une question : un mot, une phrase, une traduction…',
+      isUser: false,
+    ));
   }
 
   Future<void> _send() async {

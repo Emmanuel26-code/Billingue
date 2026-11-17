@@ -1,1 +1,55 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"fir-auth-921be","appId":"1:745514946192:android:c1cc12640684489dc89215","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"fir-auth-921be","configurations":{"android":"1:745514946192:android:c1cc12640684489dc89215","ios":"1:745514946192:ios:cf4ea6c55c680b05c89215","macos":"1:745514946192:ios:cf4ea6c55c680b05c89215","web":"1:745514946192:web:358cbf024fddbb34c89215","windows":"1:745514946192:web:44d809264b762e08c89215"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "fir-auth-921be",
+          "appId": "1:745514946192:android:c1cc12640684489dc89215",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "fir-auth-921be",
+          "configurations": {
+            "android": "1:745514946192:android:c1cc12640684489dc89215",
+            "ios": "1:745514946192:ios:cf4ea6c55c680b05c89215",
+            "macos": "1:745514946192:ios:cf4ea6c55c680b05c89215",
+            "web": "1:745514946192:web:358cbf024fddbb34c89215",
+            "windows": "1:745514946192:web:44d809264b762e08c89215"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "*.log",
+        ".secret.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ],
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
+  }
+}

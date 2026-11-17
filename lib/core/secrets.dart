@@ -1,23 +1,15 @@
-/// Clés et URLs de services externes.
+/// URLs de services externes, surchargeables au lancement :
 ///
-/// AUCUNE valeur secrète n'est écrite ici : elles sont injectées au moment
-/// du build/lancement depuis `secrets.json` (ignoré par git) :
+///   flutter run --dart-define=HUGGINGFACE_URL=...
 ///
-///   flutter run --dart-define-from-file=secrets.json
-///
-/// Copie `secrets.example.json` en `secrets.json` et remplis tes clés.
+/// La clé Anthropic n'est PAS ici : elle reste sur le serveur
+/// (Cloud Function `chatWithAya`, voir functions/).
 class Secrets {
   Secrets._();
-
-  /// Clé API Anthropic (chat avec Aya). Vide = chat désactivé.
-  static const String anthropicApiKey =
-      String.fromEnvironment('ANTHROPIC_API_KEY');
 
   /// URL du Space Hugging Face Whisper Baoulé (reconnaissance vocale).
   static const String huggingFaceUrl = String.fromEnvironment(
     'HUGGINGFACE_URL',
     defaultValue: 'https://jean2255-whisper-baoule-627cba0.hf.space/api/predict',
   );
-
-  static bool get hasAnthropicKey => anthropicApiKey.isNotEmpty;
 }
